@@ -15,58 +15,51 @@ A comprehensive enterprise AI system for automating microfinance workflows with 
 
 📖 **[For Detailed Architecture & File Reference → See README_DETAILED.md](README_DETAILED.md)**
 
+## Current Implementation Notes
+
+The current API is implemented in `backend_api.py`; `office_intelligence/api.py` is the hosted ASGI entrypoint, and `app.py` provides lazy ASGI/legacy WSGI wrappers. Non-health API routes require an `Authorization: Bearer <signed-service-token>` header validated with `OFFICE_INTELLIGENCE_SHARED_SECRET`. The token uses HS256 and the configured issuer/audience; the health routes are exempt.
+
+Current API families include `/query`, `/agent/run`, `/upload`, `/upload-file`, `/download-file`, `/documents`, `/plan`, `/execute-plan`, `/execute-plan/stream`, `/report`, `/report/execute-block`, `/report/finalize`, `/tools/credentials`, and `/status`. `/execute-plan` is hyphenated. `/health`, `/health/live`, and `/health/ready` are available without the service token.
+
+Before exposing this service to customers, resolve the duplicate `POST /upload` registration in `backend_api.py`, isolate `PythonExecutionTool` in a real sandbox, protect `tool_credentials.json` (currently a process-local JSON credential store), and verify tenant isolation for agent memory, uploaded files, and credentials. This README does not certify production readiness.
+
 ---
 
 ## Quick Start (Windows)
 
-### 1. Bootstrap Environment
+### 1. Bootstrap the Python Environment
 
 ```powershell
 python start.py
 ```
 
-This creates `.venv` and installs dependencies automatically.
+This creates `.venv` and installs `requirements.txt` when the environment is missing. It does not start the API server. The pinned runtime is Python 3.11.9 (`.python-version`).
 
 ### 2. Configure Credentials
 
-```powershell
-copy .env.example .env
-```
-
-Edit `.env` with your API keys (OpenAI, Deepseek, Google, etc.).
+Copy `.env.example` to `.env` and configure the shared service secret, allowed origins, an LLM provider/key, and only the integrations you intend to use. Keep secrets out of source control.
 
 ### 3. Start the Backend
 
 ```powershell
-python -m uvicorn office_intelligence.api:app --reload --host 0.0.0.0 --port 8000
+python -m uvicorn office_intelligence.api:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Backend is now at `http://localhost:8000`
 
 ### Deployment
 
-Render uses `render.yaml` and starts the ASGI app with Gunicorn's Uvicorn worker:
+Render uses `render.yaml` and starts the ASGI app with Uvicorn:
 
 ```text
 uvicorn office_intelligence.api:app --host 0.0.0.0 --port $PORT
 ```
 
-Set the Render service start command to exactly the command above. The legacy `app:app` entrypoint is also WSGI-compatible for older Render settings. The API entrypoint is intentionally lightweight. Agent and embedding services are created on first use rather than during import, so deployment health checks do not trigger model downloads.
+The configured entrypoint `office_intelligence.api:app` lazily imports the backend, so liveness checks do not construct the agent or embedding services. `/health/ready` reports whether the shared secret, non-wildcard origin configuration, and a non-mock LLM provider are configured.
 
 ### 4. Try It Out
 
-```bash
-# Upload a document
-curl -X POST -F "file=@report.pdf" http://localhost:8000/upload
-
-# Semantic search
-curl -X POST http://localhost:8000/query -H "Content-Type: application/json" \
-  -d '{"prompt": "Which clients have payment delays?"}'
-
-# Generate plan (dry-run)
-curl -X POST http://localhost:8000/plan -H "Content-Type: application/json" \
-  -d '{"goal": "Send payment reminders and log completion"}'
-```
+Except for health checks, API requests require a short-lived signed service token from a trusted caller. Do not generate or expose this token in browser code. Use the web app's server-side proxy or an approved test-token tool.
 
 ---
 
@@ -92,19 +85,35 @@ curl -X POST http://localhost:8000/plan -H "Content-Type: application/json" \
 
 ## REST API Endpoints
 
-| Endpoint        | Method | Purpose                 |
-| --------------- | ------ | ----------------------- |
-| `/query`        | POST   | Semantic search         |
-| `/upload`       | POST   | Ingest documents        |
-| `/documents`    | GET    | List documents          |
-| `/status`       | GET    | System status           |
-| `/plan`         | POST   | Generate plan (dry-run) |
-| `/execute_plan` | POST   | Execute plan            |
-| `/report`       | POST   | Generate report         |
+| Endpoint                                               | Method          | Purpose                                                                            |
+| ------------------------------------------------------ | --------------- | ---------------------------------------------------------------------------------- |
+| `/health`, `/health/live`, `/health/ready`             | GET             | Liveness and readiness checks; no service bearer token required.                   |
+| `/query`                                               | POST            | Retrieve relevant document context and generate an answer.                         |
+| `/agent/run`                                           | POST            | Run a registered specialist agent.                                                 |
+| `/upload`                                              | POST            | Ingest documents; see the duplicate-route warning above.                           |
+| `/upload-file`                                         | POST            | Store an uploaded file for later analysis.                                         |
+| `/download-file`                                       | GET             | Download an uploaded file by path.                                                 |
+| `/documents`, `/status`                                | GET             | List ingested documents and report service status.                                 |
+| `/plan`, `/execute-plan`, `/execute-plan/stream`       | POST, POST, GET | Preview, execute, or stream a plan. Irreversible actions may require confirmation. |
+| `/report`, `/report/execute-block`, `/report/finalize` | POST            | Generate, execute report blocks, and finalize reports.                             |
+| `/tools/credentials`                                   | POST            | Update tool credentials; currently stored in the process-local JSON store.         |
+
+All listed routes except health checks require a signed service token in the `Authorization: Bearer <token>` header.
 
 ---
 
 ## Environment Variables
+
+The API also requires the following service settings for authenticated calls and a ready production health check:
+
+```env
+OFFICE_INTELLIGENCE_SHARED_SECRET=use-a-long-random-secret
+OFFICE_INTELLIGENCE_ALLOWED_ORIGINS=http://localhost:3000
+LLM_PROVIDER=deepseek
+MAX_UPLOAD_BYTES=52428800
+```
+
+The same shared secret must be configured in the trusted server that signs requests. Do not expose it through a `NEXT_PUBLIC_` variable.
 
 ```bash
 # LLM (choose one provider)
@@ -176,7 +185,7 @@ if report.ready_to_finalize:
 
 ## LLM Adapters
 
-Supports 6 LLM providers:
+`LLMFactory` currently selects OpenAI, DeepSeek, Hugging Face, Gemini, or Mock. `GenericHTTPAdapter` is available for direct use, but the factory does not currently select it by a `generic` provider name.
 
 ```python
 from llm_interface import LLMFactory
@@ -231,7 +240,7 @@ Supervisor coordinates 5 specialist agents:
 - **Excel**: .xlsx, .xls
 - **Word**: .docx
 - **CSV**: Configurable
-- **Images**: .png, .jpg, .tiff with OCR
+- **Images**: .png, .jpg, and .jpeg; OCR depends on the selected ingestion path and installed Tesseract binary.
 
 For OCR, install Tesseract:
 
@@ -241,15 +250,9 @@ scoop install tesseract
 
 ---
 
-## Next.js Frontend
+## Web-App Integration
 
-```bash
-cd "C:\Users\hp\Pictures\Microfinince frontend"
-npm install
-npm run dev
-```
-
-Set `BACKEND_URL=http://localhost:8000` in `.env.local`
+The related Next.js project calls this service through its server-side Office Intelligence proxy. Configure `OFFICE_INTELLIGENCE_URL` in the web app and use the same `OFFICE_INTELLIGENCE_SHARED_SECRET` on both sides. Keep the secret server-side. The web app repository has its own setup instructions.
 
 ---
 
@@ -273,12 +276,12 @@ Set `BACKEND_URL=http://localhost:8000` in `.env.local`
 
 ## Documentation
 
-- **[README_DETAILED.md](README_DETAILED.md)** - Complete architecture & file reference
-- **[DETAILED_FUNCTIONALITY_REPORT.md](DETAILED_FUNCTIONALITY_REPORT.md)** - System capabilities
-- **[TOOL_CREDENTIALS_IMPLEMENTATION.md](TOOL_CREDENTIALS_IMPLEMENTATION.md)** - Tool setup
+- **[README_DETAILED.md](README_DETAILED.md)** - Current architecture, source map, API, and operational caveats
+- **[DETAILED_FUNCTIONALITY_REPORT_UPDATES.md](DETAILED_FUNCTIONALITY_REPORT_UPDATES.md)** - Recent QA and follow-up notes
+- **[ENTERPRISE_OPERATING_MODEL.md](ENTERPRISE_OPERATING_MODEL.md)** - Operational model and enterprise considerations
 
 ---
 
-**Status**: Production Ready ✅  
-**Version**: 2.0 (Advanced RAG + Multi-Agent)  
-**Python**: 3.11+
+**Implementation status:** active codebase with automated tests, but production readiness depends on resolving the documented upload, code-execution, credential-storage, and tenant-isolation risks and validating the deployed services.
+
+**Python version:** 3.11.9, as declared in `.python-version` and `render.yaml`.

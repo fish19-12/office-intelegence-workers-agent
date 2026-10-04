@@ -1,3 +1,5 @@
+The lazy ASGI wrapper's `/health/ready` check verifies that a shared secret and origin setting are present and that `LLM_PROVIDER` is not `mock`. It does not verify provider credentials or connectivity, and its check does not reject a wildcard origin.
+
 # Office Workers Agent - Detailed Architecture & File Reference
 
 ## Table of Contents
@@ -20,7 +22,67 @@
 
 ## Project Overview
 
-The **Microfinance Office Worker Agent** is a comprehensive enterprise AI system that automates complex workflows for microfinance operations. It combines:
+### Current Source Snapshot (2026-10-02)
+
+This section was checked against the current Python source, tests, `.env.example`, and `render.yaml`. It supersedes older examples below wherever they disagree. Older architecture prose is explanatory, not a guarantee that every advertised provider, tool, or workflow has been verified end to end.
+
+#### Entrypoints and runtime
+
+| File                             | Current responsibility                                                                                                                   |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `office_intelligence/api.py`     | Render/ASGI entrypoint; exports `app` from `app.asgi_app`.                                                                               |
+| `app.py`                         | Lazy ASGI app and WSGI compatibility wrapper; imports `backend_api.app` on the first non-health request.                                 |
+| `office_intelligence/runtime.py` | Shared upload path and lazily created `AgentOrchestrator` and LangChain executor.                                                        |
+| `backend_api.py`                 | FastAPI routes, service-token validation, file handling, specialist-agent routing, planning, reports, and status.                        |
+| `start.py`                       | Creates/reuses `.venv`, installs requirements, and prints integration instructions. Running it without arguments does not start the API. |
+| `render.yaml`                    | Python 3.11.9 Render service, Uvicorn command, `/health/live`, and configured secret names.                                              |
+
+For local development, use `python -m uvicorn office_intelligence.api:app --reload --host 127.0.0.1 --port 8000`. Render uses `uvicorn office_intelligence.api:app --host 0.0.0.0 --port $PORT`.
+
+#### Current HTTP contract
+
+Health endpoints `GET /health`, `GET /health/live`, and `GET /health/ready` do not require a service token. Other API requests require `Authorization: Bearer <token>`; `backend_api.py` validates an HS256 token using `OFFICE_INTELLIGENCE_SHARED_SECRET`, issuer `denbegaye-nextjs`, and audience `office-intelligence`.
+
+| Route(s)                                                                    | Purpose                                                           |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `POST /query`, `POST /agent/run`                                            | RAG query and registered specialist-agent execution.              |
+| `POST /upload`, `POST /upload-file`, `GET /download-file`, `GET /documents` | Document/file upload, retrieval, listing, and document ingestion. |
+| `POST /plan`, `POST /execute-plan`, `GET /execute-plan/stream`              | Plan preview, confirmed execution, and streamed execution.        |
+| `POST /report`, `/report/execute-block`, `/report/finalize`                 | Report generation and report-block/finalization operations.       |
+| `POST /tools/credentials`, `GET /status`                                    | Tool credential update and runtime status.                        |
+
+`POST /upload` is registered twice in `backend_api.py` with different request models: one handler expects a `files` list and ingests documents; a later handler accepts a single `file`. Resolve this collision before relying on either contract. The configured default upload limit is 50 MiB (`MAX_UPLOAD_BYTES`).
+
+#### File-by-file source map
+
+| Area                            | Files and responsibility                                                                                                                                                                                                                                                                                                                                               |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Request routing and access      | `backend_api.py` handles the REST surface and signed-service-token middleware; `backend_agent_registry.py` maps public specialist IDs; `execution_contract.py` defines execution status/mode/artifact contracts.                                                                                                                                                       |
+| Orchestration and planning      | `agent_orchestrator.py` composes document, retrieval, memory, planner, tools, and reports; `reactive_planner.py` creates and runs plans; `supervisor_agent.py` coordinates specialist agents; `agent_message_bus.py` passes inter-agent tasks.                                                                                                                         |
+| Retrieval and embeddings        | `embeddings_rag.py` implements retrieval; `context_retriever.py` normalizes retrieval context; `embedding_service.py` provides embedding operations; `embedding_cache.py`, `embedding_jobs.py`, and `embedding_observability.py` support caching, batch jobs, and telemetry; `vector_store.py` and `supabase_client.py` support vector persistence.                    |
+| Documents and reports           | `document_manager.py` manages ingestion; `ingestion.py` parses file formats; `chunker.py` splits text; `report_builder.py` builds report sections and exports.                                                                                                                                                                                                         |
+| Memory and tools                | `memory_manager.py` stores/retrieves memory; `mcp_manager.py` validates and dispatches tool calls; `tools.py` implements tool credentials and external actions.                                                                                                                                                                                                        |
+| Core specialist facade          | `specialist_agents.py` re-exports `DataAgent`, `ReportAgent`, `CommunicationAgent`, `RiskAgent`, and `SearchAgent`, implemented in `data_agent.py`, `report_agent.py`, `communication_agent.py`, `risk_agent.py`, and `search_agent.py`.                                                                                                                               |
+| Data/document analyst modules   | `csv_analyst_agent.py`, `excel_analyst_agent.py`, `sql_analyst_agent.py`, `json_analyst_agent.py`, `financial_data_analyst.py`, `timeseries_forecaster_agent.py`, `multifile_correlation_analyzer.py`, `data_quality_analyzer.py`, and `ml_modeler_agent.py` handle their named data formats or analysis tasks.                                                        |
+| Finance modules                 | `budget_actuals_analyzer.py`, `expense_auditor_agent.py`, `ar_aging_analyzer.py`, `cashflow_forecast_analyzer.py`, `payment_optimizer_agent.py`, `payroll_analyst.py`, `vendor_spend_analyzer.py`, and `invoice_processor_agent.py` implement finance-focused analyses.                                                                                                |
+| Sales and customer modules      | `leads_analyzer_agent.py`, `campaign_performance_analyzer.py`, `sales_pipeline_analyst.py`, and `churn_analyzer_agent.py` cover leads, campaigns, pipeline, and churn.                                                                                                                                                                                                 |
+| Operations and people modules   | `attendance_analyzer_agent.py`, `recruitment_analyst_agent.py`, `performance_review_analyzer.py`, `inventory_analyst_agent.py`, `supply_chain_analyzer.py`, `project_timeline_analyzer.py`, `survey_analyzer_agent.py`, and `sla_compliance_analyzer.py` cover their named operational domains.                                                                        |
+| Documents, IT, and risk modules | `word_analyst_agent.py`, `ppt_analyst_agent.py`, `email_analyzer_agent.py`, `transcript_analyzer_agent.py`, `pdf_extractor_agent.py`, `image_processor_agent.py`, `log_analyst_agent.py`, `incident_analyzer_agent.py`, `access_rights_analyzer.py`, `license_tracker_analyzer.py`, and `risk_agent.py` handle their named document, IT, compliance, or risk analyses. |
+| Tests                           | `tests/` contains tests for health, document processing, embeddings, execution contracts, LangChain, MCP tools, remote uploads, and tool credentials. These are focused tests, not full production acceptance coverage.                                                                                                                                                |
+
+The registry in `backend_agent_registry.py` exposes many named analyst IDs beyond the five reusable core agents. `/agent/run` validates IDs against that registry; a registry entry alone is not evidence that every data shape/provider combination has been tested.
+
+#### Provider and operational caveats
+
+- `LLMFactory` selects OpenAI, DeepSeek, Hugging Face, Gemini, or Mock. `GenericHTTPAdapter` exists for direct use; the factory does not select it with a `generic` name. Do not document Anthropic as a working factory provider based only on installed packages.
+- Missing provider configuration can result in Mock behavior. The lazy `/health/ready` wrapper checks that a shared secret and origin setting are present and `LLM_PROVIDER` is not `mock`; it does not validate credentials/connectivity or reject wildcard origins.
+- `PythonExecutionTool` launches a local Python subprocess. It is not an OS/container sandbox; do not expose it to untrusted users or prompts.
+- `ToolCredentialStore` writes credentials to process-local `tool_credentials.json` without encryption or tenant separation. Protect or replace it before production use.
+- The runtime returns a shared, lazy `AgentOrchestrator` singleton. Verify that document, memory, vector, upload, and credential data are isolated by tenant before multi-customer deployment; request token claims alone do not establish data partitioning.
+- Review `GET /execute-plan/stream`: the current implementation executes planned tool steps directly and does not accept the explicit `confirm` field used by `POST /execute-plan`.
+- `requirements.txt` does not include every development test tool. Install test dependencies separately where needed and run the current suite before release.
+
+Office Intelligence is a Python/FastAPI service for document retrieval and analysis, specialist data workflows, planning, and report generation. Microfinance is one supported domain; the current registry also includes finance, sales, operations, people, document, and IT analysis agents. This description is not an enterprise-readiness or compliance certification. The service combines:
 
 - **Advanced Retrieval-Augmented Generation (RAG)** with hybrid search, re-ranking, and query decomposition
 - **LLM-powered Planning** via a DAG-based reactive planner supporting parallel execution
@@ -433,18 +495,12 @@ print(f"Duration: {result.total_duration_ms}ms")
 - `HuggingFaceAdapter`: HuggingFace Inference API
 - `DeepseekAdapter`: Deepseek API (OpenAI-compatible)
 - `GeminiAdapter`: Google Gemini
-- `GenericHTTPAdapter`: Any OpenAI-compatible endpoint
+- `GenericHTTPAdapter`: Direct JSON HTTP adapter; it is not currently selected by `LLMFactory` with a `generic` provider name.
 - `LLMFactory`: Factory for creating adapters
 
 **Supported Models**:
 
-```
-OpenAI:     gpt-3.5-turbo, gpt-4, gpt-4-turbo, gpt-4o, gpt-4o-mini
-Deepseek:   deepseek-chat, deepseek-coder
-HuggingFace: mistral-7b, llama-2-70b, zephyr-7b
-Gemini:     gemini-pro, gemini-1.5
-Generic:    Any OpenAI-compatible API
-```
+`LLMFactory` provider names are `openai`/`chatgpt`, `deepseek`, `huggingface`/`hf`, `gemini`, and `mock`. Model availability depends on the selected adapter and credentials. The factory returns Mock behavior when some provider credentials are absent.
 
 **Key Methods**:
 
@@ -500,6 +556,7 @@ response = llm.generate_json(
 - **Word**: python-docx for .docx with paragraph-level metadata
 - **CSV**: pandas with configurable delimiter
 - **Images**: PIL + Tesseract OCR for .png/.jpg/.tiff
+- **Images**: PIL/Tesseract processing where configured. The current API upload allow list is narrower; check `backend_api.py` before relying on image ingestion through HTTP.
 
 **Key Classes**:
 
@@ -648,7 +705,8 @@ audit_log = mcp.get_audit_log()
 - **GoogleDriveTool**: List/upload files to Google Drive
 - **GoogleSheetsTool**: Read/write Google Sheets
 - **GoogleCalendarTool**: List/create calendar events
-- **PythonExecutionTool**: Execute Python code in sandbox
+- **PythonExecutionTool**: Launches Python in a subprocess/work directory; this is not a security sandbox.
+- **PythonExecutionTool**: Launches Python in a subprocess/work directory; this is not a security sandbox.
 - **VisualizationTool**: Create charts (matplotlib)
 - **WordReportTool**: Generate .docx reports
 
@@ -794,7 +852,9 @@ Response:
 }
 ```
 
-#### e) **POST /execute_plan** — Execute Plan
+#### e) **POST /execute-plan** — Execute Plan
+
+#### e) **POST /execute-plan** — Execute Plan
 
 Request:
 
@@ -875,7 +935,7 @@ Response:
 }
 ```
 
-#### h) **POST /credentials** — Update Tool Credentials
+#### h) **POST /tools/credentials** — Update Tool Credentials
 
 Request:
 
@@ -1280,7 +1340,7 @@ POST /upload (multipart/form-data)
 python start.py
 
 # 2. Verify installation
-python -c "from agent_orchestrator import AgentOrchestrator; print('✓ Installation successful')"
+.\.venv\Scripts\python.exe -c "from agent_orchestrator import AgentOrchestrator; print('Installation successful')"
 
 # 3. Copy environment template
 copy .env.example .env
@@ -1288,7 +1348,7 @@ copy .env.example .env
 # 4. Fill in credentials in .env
 
 # 5. Start backend API
-python -m uvicorn backend_api:app --reload --host 0.0.0.0 --port 8000
+.\.venv\Scripts\python.exe -m uvicorn office_intelligence.api:app --reload --host 127.0.0.1 --port 8000
 ```
 
 ### Manual Environment Setup
@@ -1310,6 +1370,17 @@ scoop install tesseract
 ---
 
 ## Environment Variables
+
+### Service Authentication and Readiness
+
+```env
+OFFICE_INTELLIGENCE_SHARED_SECRET=use-a-long-random-secret
+OFFICE_INTELLIGENCE_ALLOWED_ORIGINS=http://localhost:3000
+LLM_PROVIDER=deepseek
+MAX_UPLOAD_BYTES=52428800
+```
+
+The trusted caller must sign a short-lived HS256 token with the same shared secret, issuer `denbegaye-nextjs`, and audience `office-intelligence`. Keep the secret server-side.
 
 ### LLM Configuration
 
@@ -1544,6 +1615,7 @@ microfinance-agent/
 │   ├── requirements.txt           # Python dependencies
 │   ├── .env.example               # Environment template
 │   ├── tool_credentials.json      # Tool credential store
+│   ├── tool_credentials.json      # Created at runtime; local plaintext credential store
 │   └── schema_v2.sql              # Supabase schema
 │
 ├── Testing
@@ -1562,9 +1634,7 @@ microfinance-agent/
 └── Documentation
     ├── README.md                  # Quick start
     ├── README_DETAILED.md         # This file
-    ├── DETAILED_FUNCTIONALITY_REPORT.md
     ├── DETAILED_FUNCTIONALITY_REPORT_UPDATES.md
-    ├── TOOL_CREDENTIALS_IMPLEMENTATION.md
     └── implementations.md
 ```
 
@@ -1572,22 +1642,22 @@ microfinance-agent/
 
 ## Advanced Features Summary
 
-| Feature                      | Module               | Status         |
-| ---------------------------- | -------------------- | -------------- |
-| **Hybrid Search**            | embeddings_rag.py    | ✅ Active      |
-| **Cross-Encoder Re-ranking** | embeddings_rag.py    | ✅ Active      |
-| **Query Decomposition**      | embeddings_rag.py    | ✅ Active      |
-| **Contextual Compression**   | embeddings_rag.py    | ✅ Active      |
-| **Knowledge Graph**          | embeddings_rag.py    | ✅ Active      |
-| **Self-RAG**                 | embeddings_rag.py    | ✅ Active      |
-| **ChromaDB Memory**          | memory_manager.py    | ✅ Active      |
-| **DAG Planning**             | reactive_planner.py  | ✅ Active      |
-| **Dynamic Replanning**       | reactive_planner.py  | ✅ Active      |
-| **LLM Adapters**             | llm_interface.py     | ✅ 6 providers |
-| **Multi-Agent System**       | specialist_agents.py | ✅ 5 agents    |
-| **Tool Cooldown**            | mcp_manager.py       | ✅ Active      |
-| **Audit Logging**            | mcp_manager.py       | ✅ Active      |
-| **Supabase Integration**     | supabase_client.py   | ✅ Optional    |
+| Feature                      | Module               | Status                                               |
+| ---------------------------- | -------------------- | ---------------------------------------------------- |
+| **Hybrid Search**            | embeddings_rag.py    | ✅ Active                                            |
+| **Cross-Encoder Re-ranking** | embeddings_rag.py    | ✅ Active                                            |
+| **Query Decomposition**      | embeddings_rag.py    | ✅ Active                                            |
+| **Contextual Compression**   | embeddings_rag.py    | ✅ Active                                            |
+| **Knowledge Graph**          | embeddings_rag.py    | ✅ Active                                            |
+| **Self-RAG**                 | embeddings_rag.py    | ✅ Active                                            |
+| **ChromaDB Memory**          | memory_manager.py    | ✅ Active                                            |
+| **DAG Planning**             | reactive_planner.py  | ✅ Active                                            |
+| **Dynamic Replanning**       | reactive_planner.py  | ✅ Active                                            |
+| **LLM Adapters**             | llm_interface.py     | Factory providers are listed in the current snapshot |
+| **Multi-Agent System**       | specialist_agents.py | ✅ 5 agents                                          |
+| **Tool Cooldown**            | mcp_manager.py       | ✅ Active                                            |
+| **Audit Logging**            | mcp_manager.py       | ✅ Active                                            |
+| **Supabase Integration**     | supabase_client.py   | ✅ Optional                                          |
 
 ---
 
@@ -1595,20 +1665,17 @@ microfinance-agent/
 
 ### Local Development
 
-- Backend: `python -m uvicorn backend_api:app --reload --port 8000`
+- Backend: `python -m uvicorn office_intelligence.api:app --reload --host 127.0.0.1 --port 8000` (use the project virtual environment)
 - Logs: Check stdout for detailed execution traces
 - Memory: Persists to `memory_store/` automatically
 
 ### Production Deployment
 
-- Use ASGI server: `gunicorn -w 4 -k uvicorn.workers.UvicornWorker backend_api:app`
-- Enable CORS for your frontend domain only
-- Store credentials in secure vault (AWS Secrets Manager, etc.)
-- Use Supabase for distributed vector storage
-- Set environment variables securely (never in code)
+- The current Render blueprint uses `uvicorn office_intelligence.api:app --host 0.0.0.0 --port $PORT` and `/health/live`.
+- Configure `OFFICE_INTELLIGENCE_SHARED_SECRET`, allowed origins, provider settings, and required integration credentials in the hosting platform.
+- The current `ToolCredentialStore` is a local plaintext JSON file, not a secure vault. Replace it before production use.
 
 ---
 
-**Last Updated**: January 2025  
-**Architecture Version**: 2.0 (Advanced RAG + Multi-Agent)  
-**Python Version**: 3.11+
+**Last source review:** 2026-10-02
+**Python version:** 3.11.9

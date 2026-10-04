@@ -6,7 +6,7 @@ The deployed request path is:
 
 `Render -> office_intelligence.api -> app.asgi_app -> backend_api.app`
 
-`/health/live` is a cheap process liveness probe. `/health/ready` checks production configuration. All business routes require an `Authorization: Bearer <service-token>` header. Service tokens are HMAC-SHA256 signed and must contain the configured issuer, audience, `iat`, and `exp` claims.
+`/health/live` is a cheap process liveness probe. The Render entrypoint's `/health/ready` checks that the shared secret and allowed-origins setting are present and that `LLM_PROVIDER` is not `mock`; it does not validate provider credentials/connectivity or reject wildcard origins. All business routes require an `Authorization: Bearer <service-token>` header. Service tokens are HMAC-SHA256 signed and must contain issuer `denbegaye-nextjs`, audience `office-intelligence`, `iat`, and `exp` claims.
 
 For production, configure `OFFICE_INTELLIGENCE_SHARED_SECRET`, `OFFICE_INTELLIGENCE_ALLOWED_ORIGINS` with explicit origins, and a real `LLM_PROVIDER`. Keep `LLM_PROVIDER=mock` only for local development or tests.
 
@@ -18,6 +18,7 @@ For production, configure `OFFICE_INTELLIGENCE_SHARED_SECRET`, `OFFICE_INTELLIGE
 - `MemoryManager` stores episodic, semantic, and procedural memory in persistent ChromaDB under `memory_store`.
 - Session summaries, tool calls, and code execution records are written to Supabase audit tables when those calls are made.
 - Tools read credentials from environment variables first and the local credential file only as a development fallback. Production credentials belong in the hosting provider's secret manager.
+- `ToolCredentialStore` loads `tool_credentials.json` and merges its values over environment variables, so file values can override environment values. The file is plaintext, process-local, and not tenant-scoped. Do not treat it as a development-only fallback or a production secret store; replace it with an encrypted, access-controlled, tenant-aware store before customer use.
 
 ## Current synchronization behavior
 

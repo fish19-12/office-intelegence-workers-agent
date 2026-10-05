@@ -84,6 +84,19 @@ Keep new specialist agents in the matching `agents/<domain>/` package. Put
 cross-agent infrastructure in the appropriate responsibility package rather
 than adding new catch-all modules at the repository root.
 
+### Running the backend tests
+
+Install the development requirements and run the suite with the project
+interpreter:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
+```
+
+On Ubuntu, install the native `libmagic1` library before installing Python
+requirements.
+
 ---
 
 ## System workflow

@@ -94,7 +94,7 @@ The registry in `agents/core/backend_agent_registry.py` exposes many named analy
 - `ToolCredentialStore` writes credentials to process-local `tool_credentials.json` without encryption or tenant separation. Protect or replace it before production use.
 - The runtime returns a shared, lazy `AgentOrchestrator` singleton. Verify that document, memory, vector, upload, and credential data are isolated by tenant before multi-customer deployment; request token claims alone do not establish data partitioning.
 - Review `GET /execute-plan/stream`: the current implementation executes planned tool steps directly and does not accept the explicit `confirm` field used by `POST /execute-plan`.
-- `requirements.txt` does not include every development test tool. Install test dependencies separately where needed and run the current suite before release.
+- `requirements-dev.txt` includes the production requirements plus pytest. Install it and run `python -m pytest -q` before release; Ubuntu environments also need the native `libmagic1` library.
 
 Office Intelligence is a Python/FastAPI service for document retrieval and analysis, specialist data workflows, planning, and report generation. Microfinance is one supported domain; the current registry also includes finance, sales, operations, people, document, and IT analysis agents. This description is not an enterprise-readiness or compliance certification. The service combines:
 

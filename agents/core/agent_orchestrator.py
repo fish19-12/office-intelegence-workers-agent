@@ -7,7 +7,7 @@ planning, tool execution) into a single unified interface for frontend clients.
 Replaces EnterpriseFileAgent as the primary object that user-facing code interacts with.
 
 Example:
-    >>> from agent_orchestrator import AgentOrchestrator
+    >>> from agents.core.agent_orchestrator import AgentOrchestrator
     >>> config = {"llm_provider": "deepseek", "SUPABASE_URL": "..."}
     >>> agent = AgentOrchestrator(config)
     >>> asset = agent.ingest_file("report.pdf")
@@ -24,15 +24,15 @@ import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from context_retriever import ContextRetriever, RetrievedChunk
-from document_manager import DocumentAsset, DocumentManager
-from embeddings_rag import AdvancedRAG
-from llm_interface import LLMFactory
-from mcp_manager import MCPManager
-from memory_manager import MemoryManager
-from reactive_planner import PlanResult, ReactivePlanner
-from report_builder import ReportBuilder, ReportResult as BuiltReportResult
-from supabase_client import SupabaseClient
+from retrieval.context_retriever import ContextRetriever, RetrievedChunk
+from documents.document_manager import DocumentAsset, DocumentManager
+from retrieval.embeddings_rag import AdvancedRAG
+from services.llm.llm_interface import LLMFactory
+from integrations.mcp_manager import MCPManager
+from services.memory.memory_manager import MemoryManager
+from execution.reactive_planner import PlanResult, ReactivePlanner
+from reporting.report_builder import ReportBuilder, ReportResult as BuiltReportResult
+from integrations.supabase_client import SupabaseClient
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -79,7 +79,7 @@ class PlanPreview:
     chunks: List[RetrievedChunk]
 
 
-# ReportResult is now imported from report_builder module
+# ReportResult is now imported from reporting.report_builder module
 # Keeping this alias for backward compatibility with simple report generation
 # For advanced reports with code execution, use report_builder.ReportResult directly
 
@@ -639,7 +639,7 @@ class AgentOrchestrator:
             },
             "rag": self.retriever.sync_status,
             "memory": self.memory.get_full_context(),
-            "tools": self.mcp.registry.list(),
+            "integrations.tools": self.mcp.registry.list(),
             "documents": {
                 "count": len(self.documents.documents),
                 "categories": doc_categories,

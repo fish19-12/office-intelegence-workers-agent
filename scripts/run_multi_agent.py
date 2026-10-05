@@ -2,9 +2,9 @@
 import asyncio
 import logging
 
-from agent_message_bus import MessageBus
-from supervisor_agent import SupervisorAgent
-from specialist_agents import DataAgent, ReportAgent, CommunicationAgent, RiskAgent, SearchAgent
+from agents.core.agent_message_bus import MessageBus
+from agents.core.supervisor_agent import SupervisorAgent
+from agents.core.specialist_agents import DataAgent, ReportAgent, CommunicationAgent, RiskAgent, SearchAgent
 
 # A very small mock LLM that returns simple JSON for planner prompts
 class MockLLM:

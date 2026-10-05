@@ -37,6 +37,18 @@ This section was checked against the current Python source, tests, `.env.example
 | `start.py`                       | Creates/reuses `.venv`, installs requirements, and prints integration instructions. Running it without arguments does not start the API. |
 | `render.yaml`                    | Python 3.11.9 Render service, Uvicorn command, `/health/live`, and configured secret names.                                              |
 
+Agent implementations are grouped in `agents/`: `core/` contains shared agent
+contracts and orchestration; `documents/`, `finance/`, `people/`,
+`sales_marketing/`, `operations/`, and `analytics/` contain their respective
+specialists. Use package imports such as
+`from agents.finance.invoice_processor_agent import run_invoice_processor`.
+
+Shared backend modules are grouped by responsibility under `documents/`,
+`execution/`, `integrations/`, `reporting/`, `retrieval/`, `security/`, and
+`services/`. Root-level `app.py`, `backend_api.py`, and `office_intelligence/`
+remain deployment and API entry points. Project tests are collected in
+`tests/`.
+
 For local development, use `python -m uvicorn office_intelligence.api:app --reload --host 127.0.0.1 --port 8000`. Render uses `uvicorn office_intelligence.api:app --host 0.0.0.0 --port $PORT`.
 
 #### Current HTTP contract
@@ -57,20 +69,22 @@ Health endpoints `GET /health`, `GET /health/live`, and `GET /health/ready` do n
 
 | Area                            | Files and responsibility                                                                                                                                                                                                                                                                                                                                               |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Request routing and access      | `backend_api.py` handles the REST surface and signed-service-token middleware; `backend_agent_registry.py` maps public specialist IDs; `execution_contract.py` defines execution status/mode/artifact contracts.                                                                                                                                                       |
-| Orchestration and planning      | `agent_orchestrator.py` composes document, retrieval, memory, planner, tools, and reports; `reactive_planner.py` creates and runs plans; `supervisor_agent.py` coordinates specialist agents; `agent_message_bus.py` passes inter-agent tasks.                                                                                                                         |
-| Retrieval and embeddings        | `embeddings_rag.py` implements retrieval; `context_retriever.py` normalizes retrieval context; `embedding_service.py` provides embedding operations; `embedding_cache.py`, `embedding_jobs.py`, and `embedding_observability.py` support caching, batch jobs, and telemetry; `vector_store.py` and `supabase_client.py` support vector persistence.                    |
-| Documents and reports           | `document_manager.py` manages ingestion; `ingestion.py` parses file formats; `chunker.py` splits text; `report_builder.py` builds report sections and exports.                                                                                                                                                                                                         |
-| Memory and tools                | `memory_manager.py` stores/retrieves memory; `mcp_manager.py` validates and dispatches tool calls; `tools.py` implements tool credentials and external actions.                                                                                                                                                                                                        |
-| Core specialist facade          | `specialist_agents.py` re-exports `DataAgent`, `ReportAgent`, `CommunicationAgent`, `RiskAgent`, and `SearchAgent`, implemented in `data_agent.py`, `report_agent.py`, `communication_agent.py`, `risk_agent.py`, and `search_agent.py`.                                                                                                                               |
-| Data/document analyst modules   | `csv_analyst_agent.py`, `excel_analyst_agent.py`, `sql_analyst_agent.py`, `json_analyst_agent.py`, `financial_data_analyst.py`, `timeseries_forecaster_agent.py`, `multifile_correlation_analyzer.py`, `data_quality_analyzer.py`, and `ml_modeler_agent.py` handle their named data formats or analysis tasks.                                                        |
-| Finance modules                 | `budget_actuals_analyzer.py`, `expense_auditor_agent.py`, `ar_aging_analyzer.py`, `cashflow_forecast_analyzer.py`, `payment_optimizer_agent.py`, `payroll_analyst.py`, `vendor_spend_analyzer.py`, and `invoice_processor_agent.py` implement finance-focused analyses.                                                                                                |
-| Sales and customer modules      | `leads_analyzer_agent.py`, `campaign_performance_analyzer.py`, `sales_pipeline_analyst.py`, and `churn_analyzer_agent.py` cover leads, campaigns, pipeline, and churn.                                                                                                                                                                                                 |
-| Operations and people modules   | `attendance_analyzer_agent.py`, `recruitment_analyst_agent.py`, `performance_review_analyzer.py`, `inventory_analyst_agent.py`, `supply_chain_analyzer.py`, `project_timeline_analyzer.py`, `survey_analyzer_agent.py`, and `sla_compliance_analyzer.py` cover their named operational domains.                                                                        |
-| Documents, IT, and risk modules | `word_analyst_agent.py`, `ppt_analyst_agent.py`, `email_analyzer_agent.py`, `transcript_analyzer_agent.py`, `pdf_extractor_agent.py`, `image_processor_agent.py`, `log_analyst_agent.py`, `incident_analyzer_agent.py`, `access_rights_analyzer.py`, `license_tracker_analyzer.py`, and `risk_agent.py` handle their named document, IT, compliance, or risk analyses. |
+| Request routing and access      | `backend_api.py` handles REST routes and signed-service-token middleware; `agents/core/backend_agent_registry.py` maps public specialist IDs; `execution/execution_contract.py` defines execution status/mode/artifact contracts; `security/access_control.py` enforces data access rules. |
+| Orchestration and planning      | `agents/core/agent_orchestrator.py` composes services; `execution/reactive_planner.py` creates and runs plans; `agents/core/supervisor_agent.py` coordinates specialists; `agents/core/agent_message_bus.py` passes inter-agent tasks. |
+| Retrieval and embeddings        | `retrieval/` contains RAG, context retrieval, and vector storage; `services/embeddings/` contains embedding generation, cache, jobs, and observability. |
+| Documents and reports           | `documents/` contains document management, ingestion, and chunking; `reporting/report_builder.py` builds report sections and exports. |
+| Memory and tools                | `services/memory/memory_manager.py` stores/retrieves memory; `integrations/` contains MCP tool dispatch, integrations, and Supabase access. |
+| Shared model services           | `services/llm/llm_interface.py` provides the LLM abstraction and provider factory. |
+| Operational scripts             | `scripts/` contains import/debug utilities, migrations, agent demos, and temporary development searches. |
+| Core specialist facade          | `agents/core/specialist_agents.py` re-exports the reusable data, report, communication, risk, and search agents implemented in `agents/core/`. |
+| Analytics modules               | `agents/analytics/` contains CSV, Excel, SQL, JSON, forecasting, multifile, data-quality, survey, and ML analysis agents. |
+| Finance modules                 | `agents/finance/` contains budget, expenses, receivables, cash flow, payments, payroll, vendor spend, financial data, and invoice analysis. |
+| Sales and customer modules      | `agents/sales_marketing/` contains leads, campaigns, and sales-pipeline analysis; `agents/people/` contains churn analysis. |
+| Operations and people modules   | `agents/people/` contains attendance, recruitment, and performance review; `agents/operations/` contains inventory, supply chain, project timeline, and SLA analysis. |
+| Documents, IT, and risk modules | `agents/documents/` contains Word, PowerPoint, email, transcript, PDF, and image agents; `agents/operations/` contains IT/compliance analysis, and `agents/core/risk_agent.py` provides the risk specialist. |
 | Tests                           | `tests/` contains tests for health, document processing, embeddings, execution contracts, LangChain, MCP tools, remote uploads, and tool credentials. These are focused tests, not full production acceptance coverage.                                                                                                                                                |
 
-The registry in `backend_agent_registry.py` exposes many named analyst IDs beyond the five reusable core agents. `/agent/run` validates IDs against that registry; a registry entry alone is not evidence that every data shape/provider combination has been tested.
+The registry in `agents/core/backend_agent_registry.py` exposes many named analyst IDs beyond the five reusable core agents. `/agent/run` validates IDs against that registry; a registry entry alone is not evidence that every data shape/provider combination has been tested.
 
 #### Provider and operational caveats
 
@@ -171,7 +185,7 @@ Office Intelligence is a Python/FastAPI service for document retrieval and analy
 
 ## Core Components & File Descriptions
 
-### 1. **agent_orchestrator.py** — Main Orchestration Hub
+### 1. **agents/core/agent_orchestrator.py** — Main Orchestration Hub
 
 **Purpose**: Wires all services (RAG, memory, planning, agents) into a unified interface.
 
@@ -950,7 +964,7 @@ Request:
 
 ---
 
-### 11. **specialist_agents.py** — Multi-Agent Specialists
+### 11. **agents/core/specialist_agents.py** — Multi-Agent Specialists
 
 **Purpose**: Task-specialized agents for data, reports, communication, risk, and search.
 
@@ -990,7 +1004,7 @@ class BaseAgent:
 
 ---
 
-### 12. **supervisor_agent.py** — Multi-Agent Orchestrator
+### 12. **agents/core/supervisor_agent.py** — Multi-Agent Orchestrator
 
 **Purpose**: Decompose goals into tasks, assign to specialist agents, aggregate results.
 
@@ -1061,12 +1075,12 @@ result = supervisor.supervise(
 - Hybrid retrieval: local FAISS + Supabase pgvector
 - Async upsert for document embeddings
 
-#### **agent_message_bus.py** — Inter-Agent Communication
+#### **agents/core/agent_message_bus.py** — Inter-Agent Communication
 
 - `MessageBus`: Pub-sub for agent tasks
 - Supports concurrent agent execution
 
-#### **base_agent.py** — Agent Base Class
+#### **agents/core/base_agent.py** — Agent Base Class
 
 - Common interface for all agents
 - Task inbox, result collection
@@ -1594,11 +1608,14 @@ microfinance-agent/
 │   ├── memory_manager.py          # ChromaDB long-term memory
 │   └── reactive_planner.py        # DAG-based planning & execution
 │
-├── Multi-Agent System
-│   ├── base_agent.py              # Base agent class
-│   ├── specialist_agents.py       # Data/Report/Comm/Risk/Search agents
-│   ├── supervisor_agent.py        # Goal decomposition & coordination
-│   └── agent_message_bus.py       # Inter-agent communication
+├── agents
+│   ├── core/                      # Base agent, registry, bus, and orchestration
+│   ├── documents/                 # Document-format specialists
+│   ├── finance/                   # Finance specialists
+│   ├── people/                    # HR and people specialists
+│   ├── sales_marketing/           # Sales and campaign specialists
+│   ├── operations/                # Operations and compliance specialists
+│   └── analytics/                 # Data and analytics specialists
 │
 ├── Tool Integration
 │   ├── tools.py                   # Email, Google, microfinance tools

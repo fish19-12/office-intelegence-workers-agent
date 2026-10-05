@@ -9,8 +9,8 @@ import pandas as pd
 from langchain_openai import ChatOpenAI
 from langchain_experimental.agents import create_pandas_dataframe_agent
 
-from backend_agent_registry import get_agent_info
-from llm_interface import MockLLM
+from agents.core.backend_agent_registry import get_agent_info
+from services.llm.llm_interface import MockLLM
 
 
 DEFAULT_MODEL = os.environ.get("DEEPSEEK_MODEL", os.environ.get("LLM_MODEL", os.environ.get("OPENAI_MODEL", "deepseek-chat")))

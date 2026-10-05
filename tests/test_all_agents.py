@@ -7,9 +7,12 @@ Tests all 38 agents with sample data
 import sys
 import json
 import time
+from importlib import import_module
+from pkgutil import iter_modules
 from typing import Dict, Any, Optional
 from io import StringIO
 import pandas as pd
+import agents
 
 # Sample test data for different agent types
 SAMPLE_CSV_DATA = """name,category,amount,date,status
@@ -138,23 +141,31 @@ def validate_response(response: Dict[str, Any], agent_id: str) -> bool:
 
 def test_agent_import() -> None:
     """Test that agent module can be imported."""
+    agent_packages = [
+        module.name
+        for module in iter_modules(agents.__path__, f"{agents.__name__}.")
+        if module.ispkg
+    ]
     for agent_id in sorted(TEST_AGENTS):
         base = agent_id.replace("-", "_")
         candidates = [f"{base}_agent", f"{base}_analyzer", f"{base}_analyst", base]
         imported = False
-        for module_name in candidates:
-            try:
-                __import__(module_name)
-                imported = True
+        for package in agent_packages:
+            for module_name in candidates:
+                try:
+                    import_module(f"{package}.{module_name}")
+                    imported = True
+                    break
+                except ImportError:
+                    continue
+            if imported:
                 break
-            except ImportError:
-                continue
         assert imported, f"Could not import {agent_id}"
 
 
 def test_agent_in_registry() -> None:
     """Test that agent is in registry."""
-    from backend_agent_registry import is_known_agent
+    from agents.core.backend_agent_registry import is_known_agent
     for agent_id in sorted(TEST_AGENTS):
         assert is_known_agent(agent_id), f"{agent_id} not in registry"
 

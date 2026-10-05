@@ -10,7 +10,7 @@ Provides a two-step workflow:
 3. finalize() - Assemble final HTML after all code is resolved
 
 Example:
-    >>> from report_builder import ReportBuilder
+    >>> from reporting.report_builder import ReportBuilder
     >>> builder = ReportBuilder(llm, mcp, retriever)
     >>> report = builder.build("Portfolio analysis", "Analyze Q2 performance", chunks)
     >>> # Report has pending code blocks
@@ -32,8 +32,8 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
-from context_retriever import ContextRetriever, RetrievedChunk
-from mcp_manager import MCPError, MCPManager
+from retrieval.context_retriever import ContextRetriever, RetrievedChunk
+from integrations.mcp_manager import MCPError, MCPManager
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

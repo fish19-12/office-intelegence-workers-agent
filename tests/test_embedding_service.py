@@ -1,13 +1,13 @@
 import numpy as np
 import pytest
 
-from embedding_service import EmbeddingService, EmbeddingServiceError, EmbeddingValidationError
-from embedding_cache import SQLiteEmbeddingCache
-from embedding_jobs import JOB_COMPLETED, JOB_FAILED, EmbeddingBatchProcessor, SQLiteEmbeddingJobStore
-from vector_store import PersistentVectorStore, PGVectorStore, VectorDimensionError, VectorRecord, VectorStoreError
-from access_control import AccessContext, AccessPolicy
-from embedding_observability import EmbeddingMetrics, StructuredEventLogger
-import embeddings_rag
+from services.embeddings.embedding_service import EmbeddingService, EmbeddingServiceError, EmbeddingValidationError
+from services.embeddings.embedding_cache import SQLiteEmbeddingCache
+from services.embeddings.embedding_jobs import JOB_COMPLETED, JOB_FAILED, EmbeddingBatchProcessor, SQLiteEmbeddingJobStore
+from retrieval.vector_store import PersistentVectorStore, PGVectorStore, VectorDimensionError, VectorRecord, VectorStoreError
+from security.access_control import AccessContext, AccessPolicy
+from services.embeddings.embedding_observability import EmbeddingMetrics, StructuredEventLogger
+import retrieval.embeddings_rag as embeddings_rag
 
 
 class FakeEmbeddingModel:

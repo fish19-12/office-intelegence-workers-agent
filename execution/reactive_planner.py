@@ -1,4 +1,4 @@
-﻿"""
+"""
 Reactive Planning Module
 
 Implements a DAG-based planner for microfinance workflows.
@@ -17,9 +17,9 @@ import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
-from context_retriever import ContextRetriever, RetrievedChunk
-from memory_manager import MemoryManager
-from mcp_manager import MCPError, MCPManager
+from retrieval.context_retriever import ContextRetriever, RetrievedChunk
+from services.memory.memory_manager import MemoryManager
+from integrations.mcp_manager import MCPError, MCPManager
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

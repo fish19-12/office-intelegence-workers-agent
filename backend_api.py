@@ -27,53 +27,53 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 from urllib.parse import quote_plus
 
-from agent_orchestrator import ConfirmationRequiredError
-from backend_agent_registry import is_known_agent
-from csv_analyst_agent import run_csv_analyst
-from excel_analyst_agent import run_excel_analyst
-from sql_analyst_agent import run_sql_analyst
-from financial_data_analyst import run_financial_analyst
-from payroll_analyst import run_payroll_analyst
-from sales_pipeline_analyst import run_sales_pipeline_analyst
-from json_analyst_agent import run_json_analyst
-from churn_analyzer_agent import run_churn_analyzer
-from attendance_analyzer_agent import run_attendance_analyzer
-from word_analyst_agent import run_word_analyst
-from ppt_analyst_agent import run_ppt_analyst
-from email_analyzer_agent import run_email_analyzer
-from transcript_analyzer_agent import run_transcript_analyzer
-from invoice_processor_agent import run_invoice_processor
-from recruitment_analyst_agent import run_recruitment_analyst
-from performance_review_analyzer import run_performance_review_analyzer
-from budget_actuals_analyzer import run_budget_actuals_analyzer
-from expense_auditor_agent import run_expense_auditor
-from ar_aging_analyzer import run_ar_aging_analyzer
-from cashflow_forecast_analyzer import run_cashflow_forecast_analyzer
-from vendor_spend_analyzer import run_vendor_spend_analyzer
-from payment_optimizer_agent import run_payment_optimizer
-from project_timeline_analyzer import run_project_timeline_analyzer
-from sla_compliance_analyzer import run_sla_compliance_analyzer
-from inventory_analyst_agent import run_inventory_analyst
-from supply_chain_analyzer import run_supply_chain_analyzer
-from leads_analyzer_agent import run_leads_analyzer
-from campaign_performance_analyzer import run_campaign_performance_analyzer
-from survey_analyzer_agent import run_survey_analyzer
-from access_rights_analyzer import run_access_rights_analyzer
-from license_tracker_analyzer import run_license_tracker_analyzer
-from incident_analyzer_agent import run_incident_analyzer
-from ml_modeler_agent import run_ml_modeler
-from log_analyst_agent import run_log_analyst
-from image_processor_agent import run_image_processor
-from pdf_extractor_agent import run_pdf_extractor
-from timeseries_forecaster_agent import run_timeseries_forecaster
-from multifile_correlation_analyzer import run_multifile_correlation_analyzer
-from data_quality_analyzer import run_data_quality_analyzer
-from langchain_agent import LangChainAgentExecutor
-from report_builder import CodeBlock, ReportSection, ReportResult as BuiltReportResult
+from agents.core.agent_orchestrator import ConfirmationRequiredError
+from agents.core.backend_agent_registry import is_known_agent
+from agents.analytics.csv_analyst_agent import run_csv_analyst
+from agents.analytics.excel_analyst_agent import run_excel_analyst
+from agents.analytics.sql_analyst_agent import run_sql_analyst
+from agents.finance.financial_data_analyst import run_financial_analyst
+from agents.finance.payroll_analyst import run_payroll_analyst
+from agents.sales_marketing.sales_pipeline_analyst import run_sales_pipeline_analyst
+from agents.analytics.json_analyst_agent import run_json_analyst
+from agents.people.churn_analyzer_agent import run_churn_analyzer
+from agents.people.attendance_analyzer_agent import run_attendance_analyzer
+from agents.documents.word_analyst_agent import run_word_analyst
+from agents.documents.ppt_analyst_agent import run_ppt_analyst
+from agents.documents.email_analyzer_agent import run_email_analyzer
+from agents.documents.transcript_analyzer_agent import run_transcript_analyzer
+from agents.finance.invoice_processor_agent import run_invoice_processor
+from agents.people.recruitment_analyst_agent import run_recruitment_analyst
+from agents.people.performance_review_analyzer import run_performance_review_analyzer
+from agents.finance.budget_actuals_analyzer import run_budget_actuals_analyzer
+from agents.finance.expense_auditor_agent import run_expense_auditor
+from agents.finance.ar_aging_analyzer import run_ar_aging_analyzer
+from agents.finance.cashflow_forecast_analyzer import run_cashflow_forecast_analyzer
+from agents.finance.vendor_spend_analyzer import run_vendor_spend_analyzer
+from agents.finance.payment_optimizer_agent import run_payment_optimizer
+from agents.operations.project_timeline_analyzer import run_project_timeline_analyzer
+from agents.operations.sla_compliance_analyzer import run_sla_compliance_analyzer
+from agents.operations.inventory_analyst_agent import run_inventory_analyst
+from agents.operations.supply_chain_analyzer import run_supply_chain_analyzer
+from agents.sales_marketing.leads_analyzer_agent import run_leads_analyzer
+from agents.sales_marketing.campaign_performance_analyzer import run_campaign_performance_analyzer
+from agents.analytics.survey_analyzer_agent import run_survey_analyzer
+from agents.operations.access_rights_analyzer import run_access_rights_analyzer
+from agents.operations.license_tracker_analyzer import run_license_tracker_analyzer
+from agents.operations.incident_analyzer_agent import run_incident_analyzer
+from agents.analytics.ml_modeler_agent import run_ml_modeler
+from agents.operations.log_analyst_agent import run_log_analyst
+from agents.documents.image_processor_agent import run_image_processor
+from agents.documents.pdf_extractor_agent import run_pdf_extractor
+from agents.analytics.timeseries_forecaster_agent import run_timeseries_forecaster
+from agents.analytics.multifile_correlation_analyzer import run_multifile_correlation_analyzer
+from agents.analytics.data_quality_analyzer import run_data_quality_analyzer
+from agents.core.langchain_agent import LangChainAgentExecutor
+from reporting.report_builder import CodeBlock, ReportSection, ReportResult as BuiltReportResult
 from fastapi.responses import StreamingResponse
-from tools import ToolCredentialStore
+from integrations.tools import ToolCredentialStore
 from office_intelligence.runtime import UPLOAD_DIR, get_agent, get_langchain_executor
-from execution_contract import ExecutionMode, ExecutionStatus, create_execution_record
+from execution.execution_contract import ExecutionMode, ExecutionStatus, create_execution_record
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
@@ -763,14 +763,14 @@ async def run_agent(request: Request, payload: AgentExecutionRequest) -> AgentEx
             if payload.table_csv or payload.table_json:
                 perf_result = run_performance_review_analyzer(payload.table_csv, payload.table_json, payload.prompt)
                 answer = json.dumps(perf_result)
-                metadata["source"] = "performance_review_analyzer"
+                metadata["source"] = "agents.people.performance_review_analyzer"
             else:
                 raise HTTPException(status_code=400, detail="performance-review requires CSV or table_json input.")
         elif payload.agent_id == "budget-actuals":
             if payload.table_csv or payload.table_json:
                 budget_result = run_budget_actuals_analyzer(payload.table_csv, payload.table_json, payload.prompt)
                 answer = json.dumps(budget_result)
-                metadata["source"] = "budget_actuals_analyzer"
+                metadata["source"] = "agents.finance.budget_actuals_analyzer"
             else:
                 raise HTTPException(status_code=400, detail="budget-actuals requires CSV or table_json input.")
         elif payload.agent_id == "expense-auditor":
@@ -784,21 +784,21 @@ async def run_agent(request: Request, payload: AgentExecutionRequest) -> AgentEx
             if payload.table_csv or payload.table_json:
                 ar_result = run_ar_aging_analyzer(payload.table_csv, payload.table_json, payload.prompt)
                 answer = json.dumps(ar_result)
-                metadata["source"] = "ar_aging_analyzer"
+                metadata["source"] = "agents.finance.ar_aging_analyzer"
             else:
                 raise HTTPException(status_code=400, detail="ar-aging requires CSV or table_json input.")
         elif payload.agent_id == "cashflow-forecast":
             if payload.table_csv or payload.table_json:
                 cashflow_result = run_cashflow_forecast_analyzer(payload.table_csv, payload.table_json, payload.prompt)
                 answer = json.dumps(cashflow_result)
-                metadata["source"] = "cashflow_forecast_analyzer"
+                metadata["source"] = "agents.finance.cashflow_forecast_analyzer"
             else:
                 raise HTTPException(status_code=400, detail="cashflow-forecast requires CSV or table_json input.")
         elif payload.agent_id == "vendor-spend":
             if payload.table_csv or payload.table_json:
                 vendor_result = run_vendor_spend_analyzer(payload.table_csv, payload.table_json, payload.prompt)
                 answer = json.dumps(vendor_result)
-                metadata["source"] = "vendor_spend_analyzer"
+                metadata["source"] = "agents.finance.vendor_spend_analyzer"
             else:
                 raise HTTPException(status_code=400, detail="vendor-spend requires CSV or table_json input.")
         elif payload.agent_id == "payment-optimizer":
@@ -812,14 +812,14 @@ async def run_agent(request: Request, payload: AgentExecutionRequest) -> AgentEx
             if payload.table_csv or payload.table_json:
                 project_result = run_project_timeline_analyzer(payload.table_csv, payload.table_json, payload.prompt)
                 answer = json.dumps(project_result)
-                metadata["source"] = "project_timeline_analyzer"
+                metadata["source"] = "agents.operations.project_timeline_analyzer"
             else:
                 raise HTTPException(status_code=400, detail="project-timeline requires CSV or table_json input.")
         elif payload.agent_id == "sla-compliance":
             if payload.table_csv or payload.table_json:
                 sla_result = run_sla_compliance_analyzer(payload.table_csv, payload.table_json, payload.prompt)
                 answer = json.dumps(sla_result)
-                metadata["source"] = "sla_compliance_analyzer"
+                metadata["source"] = "agents.operations.sla_compliance_analyzer"
             else:
                 raise HTTPException(status_code=400, detail="sla-compliance requires CSV or table_json input.")
         elif payload.agent_id == "inventory-analyst":
@@ -833,7 +833,7 @@ async def run_agent(request: Request, payload: AgentExecutionRequest) -> AgentEx
             if payload.table_csv or payload.table_json:
                 supply_result = run_supply_chain_analyzer(payload.table_csv, payload.table_json, payload.prompt)
                 answer = json.dumps(supply_result)
-                metadata["source"] = "supply_chain_analyzer"
+                metadata["source"] = "agents.operations.supply_chain_analyzer"
             else:
                 raise HTTPException(status_code=400, detail="supply-chain requires CSV or table_json input.")
         elif payload.agent_id == "leads-analyzer":
@@ -847,7 +847,7 @@ async def run_agent(request: Request, payload: AgentExecutionRequest) -> AgentEx
             if payload.table_csv or payload.table_json:
                 campaign_result = run_campaign_performance_analyzer(payload.table_csv, payload.table_json, payload.prompt)
                 answer = json.dumps(campaign_result)
-                metadata["source"] = "campaign_performance_analyzer"
+                metadata["source"] = "agents.sales_marketing.campaign_performance_analyzer"
             else:
                 raise HTTPException(status_code=400, detail="campaign-performance requires CSV or table_json input.")
         elif payload.agent_id == "survey-analyzer":
@@ -861,14 +861,14 @@ async def run_agent(request: Request, payload: AgentExecutionRequest) -> AgentEx
             if payload.table_csv or payload.table_json:
                 access_result = run_access_rights_analyzer(payload.table_csv, payload.table_json, payload.prompt)
                 answer = json.dumps(access_result)
-                metadata["source"] = "access_rights_analyzer"
+                metadata["source"] = "agents.operations.access_rights_analyzer"
             else:
                 raise HTTPException(status_code=400, detail="access-rights requires CSV or table_json input.")
         elif payload.agent_id == "license-tracker":
             if payload.table_csv or payload.table_json:
                 license_result = run_license_tracker_analyzer(payload.table_csv, payload.table_json, payload.prompt)
                 answer = json.dumps(license_result)
-                metadata["source"] = "license_tracker_analyzer"
+                metadata["source"] = "agents.operations.license_tracker_analyzer"
             else:
                 raise HTTPException(status_code=400, detail="license-tracker requires CSV or table_json input.")
         elif payload.agent_id == "incident-analyzer":
@@ -917,14 +917,14 @@ async def run_agent(request: Request, payload: AgentExecutionRequest) -> AgentEx
             if payload.table_csv or payload.table_json:
                 multi_result = run_multifile_correlation_analyzer(payload.table_csv, payload.table_json, payload.prompt)
                 answer = json.dumps(multi_result)
-                metadata["source"] = "multifile_correlation_analyzer"
+                metadata["source"] = "agents.analytics.multifile_correlation_analyzer"
             else:
                 raise HTTPException(status_code=400, detail="multifile-correlation requires CSV or table_json input.")
         elif payload.agent_id == "data-quality":
             if payload.table_csv or payload.table_json:
                 quality_result = run_data_quality_analyzer(payload.table_csv, payload.table_json, payload.prompt)
                 answer = json.dumps(quality_result)
-                metadata["source"] = "data_quality_analyzer"
+                metadata["source"] = "agents.analytics.data_quality_analyzer"
             else:
                 raise HTTPException(status_code=400, detail="data-quality requires CSV or table_json input.")
         elif payload.table_csv or payload.table_json:

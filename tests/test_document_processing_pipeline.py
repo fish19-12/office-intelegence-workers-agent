@@ -1,4 +1,4 @@
-from document_manager import (
+from documents.document_manager import (
     Chunk,
     ChunkFinalizationLayer,
     DocumentLoader,

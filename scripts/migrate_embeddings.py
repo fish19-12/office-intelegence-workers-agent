@@ -1,7 +1,7 @@
 """
 Run this ONCE after upgrading to BAAI/bge-m3.
 Re-embeds all documents in Supabase with the new 1024-dim model.
-Usage: python migrate_embeddings.py [--dry-run]
+Usage: python -m scripts.migrate_embeddings [--dry-run]
 """
 
 import argparse
@@ -17,7 +17,7 @@ except Exception as exc:
     print('supabase package not available:', exc)
     sys.exit(1)
 
-from embeddings_rag import HuggingFaceEmbeddings
+from retrieval.embeddings_rag import HuggingFaceEmbeddings
 
 SUPABASE_URL = os.environ.get('SUPABASE_URL')
 SUPABASE_KEY = os.environ.get('SUPABASE_KEY')

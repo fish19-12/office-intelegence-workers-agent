@@ -6,8 +6,8 @@ Tests core RAG functionality without requiring full orchestrator initialization.
 
 import sys
 import asyncio
-from embeddings_rag import AdvancedRAG
-from llm_interface import LLMFactory
+from retrieval.embeddings_rag import AdvancedRAG
+from services.llm.llm_interface import LLMFactory
 
 
 def _build_rag_and_llm():

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
-from base_agent import BaseAgent
+from agents.core.base_agent import BaseAgent
 
 
 class DataAgent(BaseAgent):

@@ -14,17 +14,17 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
-from chunker import chunk_text
-from embeddings_rag import AdvancedRAG
-from ingestion import ingest_file
-from supabase_client import SupabaseClient
+from documents.chunker import chunk_text
+from retrieval.embeddings_rag import AdvancedRAG
+from documents.ingestion import ingest_file
+from integrations.supabase_client import SupabaseClient
 try:
     from langdetect import detect
 except Exception:
     def detect(text: str) -> str:  # type: ignore
         return 'unknown'
-from llm_interface import LLMFactory
-from mcp_manager import MCPError, MCPManager
+from services.llm.llm_interface import LLMFactory
+from integrations.mcp_manager import MCPError, MCPManager
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

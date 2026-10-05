@@ -1,7 +1,7 @@
 import pytest
 
-from embeddings_rag import AdvancedRAG
-from llm_interface import LLMFactory
+from retrieval.embeddings_rag import AdvancedRAG
+from services.llm.llm_interface import LLMFactory
 
 
 @pytest.fixture(scope="session")

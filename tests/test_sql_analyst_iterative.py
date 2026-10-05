@@ -10,7 +10,7 @@ import json
 import tempfile
 import sqlite3
 from pathlib import Path
-from sql_analyst_agent import (
+from agents.analytics.sql_analyst_agent import (
     agent_reasoning_loop,
     run_sql_analyst,
     MEMORY,

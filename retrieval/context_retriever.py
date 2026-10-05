@@ -5,8 +5,8 @@ Extracts and manages semantic search logic with support for local (FAISS) and re
 (Supabase) backends. Provides intelligent filtering, deduplication, and formatting for LLM injection.
 
 Example:
-    >>> from embeddings_rag import AdvancedRAG
-    >>> from supabase_client import SupabaseClient
+    >>> from retrieval.embeddings_rag import AdvancedRAG
+    >>> from integrations.supabase_client import SupabaseClient
     >>> rag = AdvancedRAG(llm=None)
     >>> supabase = SupabaseClient()  # optional
     >>> retriever = ContextRetriever(rag=rag, supabase_client=supabase)
@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-from embeddings_rag import AdvancedRAG
+from retrieval.embeddings_rag import AdvancedRAG
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

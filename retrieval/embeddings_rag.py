@@ -9,9 +9,9 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 from sentence_transformers import CrossEncoder
 
-from embedding_service import EmbeddingService
-from access_control import AccessContext, AccessPolicy
-from vector_store import PersistentVectorStore, VectorRecord
+from services.embeddings.embedding_service import EmbeddingService
+from security.access_control import AccessContext, AccessPolicy
+from retrieval.vector_store import PersistentVectorStore, VectorRecord
 
 try:
     from rank_bm25 import BM25Okapi

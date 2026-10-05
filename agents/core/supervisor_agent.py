@@ -7,8 +7,8 @@ import logging
 import time
 from typing import Any, Dict, List, Optional
 
-from agent_message_bus import MessageBus, make_task_message
-from base_agent import BaseAgent
+from agents.core.agent_message_bus import MessageBus, make_task_message
+from agents.core.base_agent import BaseAgent
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

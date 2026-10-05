@@ -17,8 +17,8 @@ import pandas as pd
 from langchain_openai import ChatOpenAI
 from langchain_experimental.agents import create_pandas_dataframe_agent
 
-from llm_interface import BaseLLM, LLMFactory, MockLLM, ToolCallResponse
-from tools import PythonExecutionTool
+from services.llm.llm_interface import BaseLLM, LLMFactory, MockLLM, ToolCallResponse
+from integrations.tools import PythonExecutionTool
 
 SQL_ANALYST_SYSTEM_PROMPT = """You are an Advanced AI Data Analyst Agent.
 

@@ -16,45 +16,45 @@ def test_imports():
     print("-" * 80)
     
     agents_to_test = [
-        "csv_analyst_agent",
-        "sql_analyst_agent",
-        "excel_analyst_agent",
-        "financial_data_analyst",
-        "payroll_analyst",
-        "sales_pipeline_analyst",
-        "json_analyst_agent",
-        "churn_analyzer_agent",
-        "attendance_analyzer_agent",
-        "word_analyst_agent",
-        "ppt_analyst_agent",
-        "email_analyzer_agent",
-        "transcript_analyzer_agent",
-        "invoice_processor_agent",
-        "recruitment_analyst_agent",
-        "performance_review_analyzer",
-        "budget_actuals_analyzer",
-        "expense_auditor_agent",
-        "ar_aging_analyzer",
-        "cashflow_forecast_analyzer",
-        "vendor_spend_analyzer",
-        "payment_optimizer_agent",
-        "project_timeline_analyzer",
-        "sla_compliance_analyzer",
-        "inventory_analyst_agent",
-        "supply_chain_analyzer",
-        "leads_analyzer_agent",
-        "campaign_performance_analyzer",
-        "survey_analyzer_agent",
-        "access_rights_analyzer",
-        "license_tracker_analyzer",
-        "incident_analyzer_agent",
-        "ml_modeler_agent",
-        "log_analyst_agent",
-        "image_processor_agent",
-        "pdf_extractor_agent",
-        "timeseries_forecaster_agent",
-        "multifile_correlation_analyzer",
-        "data_quality_analyzer",
+        "agents.analytics.csv_analyst_agent",
+        "agents.analytics.sql_analyst_agent",
+        "agents.analytics.excel_analyst_agent",
+        "agents.finance.financial_data_analyst",
+        "agents.finance.payroll_analyst",
+        "agents.sales_marketing.sales_pipeline_analyst",
+        "agents.analytics.json_analyst_agent",
+        "agents.people.churn_analyzer_agent",
+        "agents.people.attendance_analyzer_agent",
+        "agents.documents.word_analyst_agent",
+        "agents.documents.ppt_analyst_agent",
+        "agents.documents.email_analyzer_agent",
+        "agents.documents.transcript_analyzer_agent",
+        "agents.finance.invoice_processor_agent",
+        "agents.people.recruitment_analyst_agent",
+        "agents.people.performance_review_analyzer",
+        "agents.finance.budget_actuals_analyzer",
+        "agents.finance.expense_auditor_agent",
+        "agents.finance.ar_aging_analyzer",
+        "agents.finance.cashflow_forecast_analyzer",
+        "agents.finance.vendor_spend_analyzer",
+        "agents.finance.payment_optimizer_agent",
+        "agents.operations.project_timeline_analyzer",
+        "agents.operations.sla_compliance_analyzer",
+        "agents.operations.inventory_analyst_agent",
+        "agents.operations.supply_chain_analyzer",
+        "agents.sales_marketing.leads_analyzer_agent",
+        "agents.sales_marketing.campaign_performance_analyzer",
+        "agents.analytics.survey_analyzer_agent",
+        "agents.operations.access_rights_analyzer",
+        "agents.operations.license_tracker_analyzer",
+        "agents.operations.incident_analyzer_agent",
+        "agents.analytics.ml_modeler_agent",
+        "agents.operations.log_analyst_agent",
+        "agents.documents.image_processor_agent",
+        "agents.documents.pdf_extractor_agent",
+        "agents.analytics.timeseries_forecaster_agent",
+        "agents.analytics.multifile_correlation_analyzer",
+        "agents.analytics.data_quality_analyzer",
     ]
     
     failed = []
@@ -77,12 +77,12 @@ def test_imports():
 
 
 def test_registry():
-    """Test that backend_agent_registry contains all expected agents."""
+    """Test that agents.core.backend_agent_registry contains all expected agents."""
     print()
     print("Testing Agent Registry...")
     print("-" * 80)
     
-    from backend_agent_registry import AGENT_REGISTRY, is_known_agent
+    from agents.core.backend_agent_registry import AGENT_REGISTRY, is_known_agent
     
     expected_agents = [
         "csv-analyst",

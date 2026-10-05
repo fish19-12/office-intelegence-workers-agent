@@ -7,8 +7,8 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from mcp_manager import MCPError, MCPManager, ToolRegistry
-from tools import ToolBase
+from integrations.mcp_manager import MCPError, MCPManager, ToolRegistry
+from integrations.tools import ToolBase
 
 
 class FailingTool(ToolBase):

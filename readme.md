@@ -63,6 +63,27 @@ flowchart LR
 
 This architecture gives the system a clean separation between interface, orchestration, intelligence, and execution.
 
+### Repository package layout
+
+```text
+app.py, backend_api.py       Stable application/API entry points
+agents/                      Agent implementations grouped by business domain
+documents/                   Document parsing, ingestion, and chunking
+execution/                   Planning and execution contracts
+integrations/                MCP, external tools, and Supabase integration
+office_intelligence/         Deployment API and shared runtime
+reporting/                   Report generation
+retrieval/                   RAG, context retrieval, and vector storage
+security/                    Access-control policies
+services/                    Embeddings, LLM, and memory services
+tests/                       Automated tests
+scripts/                     Development and migration utilities
+```
+
+Keep new specialist agents in the matching `agents/<domain>/` package. Put
+cross-agent infrastructure in the appropriate responsibility package rather
+than adding new catch-all modules at the repository root.
+
 ---
 
 ## System workflow
@@ -95,11 +116,11 @@ sequenceDiagram
 | --- | --- |
 | `app.py` | ASGI/WSGI entry wrapper and runtime bootstrap |
 | `backend_api.py` | REST API and service endpoints |
-| `agent_orchestrator.py` | Central request routing and orchestration |
-| `supervisor_agent.py` | Coordination of multiple specialist agents |
-| `specialist_agents.py` | Domain-specific agent façade |
+| `agents/core/agent_orchestrator.py` | Central request routing and orchestration |
+| `agents/core/supervisor_agent.py` | Coordination of multiple specialist agents |
+| `agents/core/specialist_agents.py` | Domain-specific agent façade |
 | `reactive_planner.py` | Planning and execution flow management |
-| `base_agent.py` | Shared agent base behavior |
+| `agents/core/base_agent.py` | Shared agent base behavior |
 | `llm_interface.py` | LLM provider abstraction |
 | `embeddings_rag.py` | Retrieval-augmented generation engine |
 | `memory_manager.py` | Knowledge and memory persistence |
@@ -109,6 +130,31 @@ sequenceDiagram
 | `vector_store.py` | Vector memory and retrieval layer |
 | `supabase_client.py` | Optional Supabase-backed integrations |
 | `report_builder.py` | Report assembly and output generation |
+
+### Agent package structure
+
+Agent implementations live under `agents/`, grouped by their primary domain.
+Shared agent coordination and the general-purpose specialist façade are in
+`agents/core/`; format-specific document agents, business-domain agents, and
+analytics agents are separated into focused packages.
+
+```text
+agents/
+  core/              Base agent, message bus, registry, supervisor, orchestration
+  documents/         Word, PDF, PowerPoint, email, transcript, and image agents
+  finance/           Invoices, expenses, payroll, receivables, cash flow, and spend
+  people/            Attendance, recruitment, churn, and performance analysis
+  sales_marketing/   Leads, campaigns, and sales-pipeline analysis
+  operations/        Inventory, supply chain, incidents, access, and compliance
+  analytics/         CSV, Excel, JSON, SQL, forecasting, ML, and data quality
+```
+
+Import agents through their package paths, for example:
+
+```python
+from agents.analytics.csv_analyst_agent import run_csv_analyst
+from agents.core.supervisor_agent import SupervisorAgent
+```
 
 ---
 

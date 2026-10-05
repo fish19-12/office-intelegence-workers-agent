@@ -8,8 +8,8 @@ from threading import Lock
 from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
-    from agent_orchestrator import AgentOrchestrator
-    from langchain_agent import LangChainAgentExecutor
+    from agents.core.agent_orchestrator import AgentOrchestrator
+    from agents.core.langchain_agent import LangChainAgentExecutor
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 UPLOAD_DIR = Path(os.environ.get("UPLOAD_DIR", PROJECT_ROOT / "uploads"))
@@ -22,7 +22,7 @@ _langchain_lock = Lock()
 
 
 def create_agent() -> AgentOrchestrator:
-    from agent_orchestrator import AgentOrchestrator
+    from agents.core.agent_orchestrator import AgentOrchestrator
 
     config = dict(os.environ)
     config["llm_provider"] = os.environ.get("LLM_PROVIDER", "deepseek")
@@ -41,7 +41,7 @@ def get_agent() -> AgentOrchestrator:
 
 
 def get_langchain_executor() -> LangChainAgentExecutor:
-    from langchain_agent import LangChainAgentExecutor
+    from agents.core.langchain_agent import LangChainAgentExecutor
 
     global _langchain_executor
     if _langchain_executor is None:

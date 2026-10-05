@@ -1,4 +1,4 @@
-﻿import re
+import re
 from pathlib import Path
 backend = Path(r'C:/Users/hp/Pictures/Microfinince workers agent/backend_agent_registry.py').read_text(encoding='utf-8')
 frontend = Path(r'C:/Users/hp/Pictures/Microfinince  frontend/lib/agents.ts').read_text(encoding='utf-8')

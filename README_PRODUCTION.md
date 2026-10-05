@@ -92,11 +92,11 @@ This architecture is intentionally modular so that teams can extend domain logic
 | `app.py` | ASGI/WSGI compatibility and lazy import wrapper |
 | `backend_api.py` | Primary FastAPI backend and API contract |
 | `office_intelligence/api.py` | ASGI application entrypoint used by deployment |
-| `agent_orchestrator.py` | Central orchestration of services and requests |
-| `supervisor_agent.py` | Coordinates multiple specialist agents |
-| `specialist_agents.py` | Domain-level agent facade |
+| `agents/core/agent_orchestrator.py` | Central orchestration of services and requests |
+| `agents/core/supervisor_agent.py` | Coordinates multiple specialist agents |
+| `agents/core/specialist_agents.py` | Domain-level agent facade |
 | `reactive_planner.py` | Creates and executes plans for tasks |
-| `base_agent.py` | Shared base class for agent implementations |
+| `agents/core/base_agent.py` | Shared base class for agent implementations |
 | `llm_interface.py` | LLM abstraction layer |
 | `embeddings_rag.py` | Retrieval and generation stack |
 | `memory_manager.py` | Long-term and short-term memory operations |
@@ -114,6 +114,12 @@ This architecture is intentionally modular so that teams can extend domain logic
 ## 5. Multi-Agent Design
 
 The system is organized around the idea that a single monolithic agent is inefficient for complex business work. Instead, the project creates specialist agents that each focus on a domain or task type.
+
+Implementations are grouped under `agents/`: orchestration and shared contracts
+are in `core/`, while document, finance, people, sales/marketing, operations,
+and analytics specialists live in their corresponding domain packages. Import
+them using package paths, for example
+`from agents.analytics.csv_analyst_agent import run_csv_analyst`.
 
 Examples in the repository include:
 
@@ -173,11 +179,11 @@ The project is designed for real business inputs, not just free-form prompts.
 
 ### Supported patterns
 
-- CSV analysis with `csv_analyst_agent.py`
-- Excel analysis with `excel_analyst_agent.py`
-- JSON analysis with `json_analyst_agent.py`
-- SQL-oriented workflows with `sql_analyst_agent.py`
-- PDF extraction and parsing through `pdf_extractor_agent.py`
+- CSV analysis with `agents/analytics/csv_analyst_agent.py`
+- Excel analysis with `agents/analytics/excel_analyst_agent.py`
+- JSON analysis with `agents/analytics/json_analyst_agent.py`
+- SQL-oriented workflows with `agents/analytics/sql_analyst_agent.py`
+- PDF extraction and parsing through `agents/documents/pdf_extractor_agent.py`
 - file/document lifecycle management via `document_manager.py`
 
 ### Processing flow
@@ -333,24 +339,28 @@ EMAIL_PASSWORD=
 .
 ├── app.py
 ├── backend_api.py
-├── base_agent.py
-├── agent_orchestrator.py
-├── supervisor_agent.py
-├── specialist_agents.py
-├── reactive_planner.py
-├── llm_interface.py
-├── embeddings_rag.py
-├── memory_manager.py
-├── vector_store.py
-├── document_manager.py
-├── ingestion.py
-├── chunker.py
-├── tools.py
-├── mcp_manager.py
-├── report_builder.py
+├── agents/
+│   ├── core/
+│   ├── documents/
+│   ├── finance/
+│   ├── people/
+│   ├── sales_marketing/
+│   ├── operations/
+│   └── analytics/
+├── documents/
+├── execution/
+├── integrations/
 ├── office_intelligence/
 │   ├── api.py
 │   └── runtime.py
+├── reporting/
+├── retrieval/
+├── scripts/
+├── security/
+├── services/
+│   ├── embeddings/
+│   ├── llm/
+│   └── memory/
 ├── data/
 ├── uploads/
 ├── memory_store/
@@ -487,6 +497,6 @@ It still requires production hardening before public or broad enterprise deploym
 - `render.yaml` — deployment configuration
 - `.env.example` — runtime environment configuration
 - `backend_api.py` — primary API surface
-- `agent_orchestrator.py` — central orchestration engine
+- `agents/core/agent_orchestrator.py` — central orchestration engine
 
 This document is intended to serve as the production-level system overview for the repository and should be used alongside the implementation documents for operational decisions and engineering planning.

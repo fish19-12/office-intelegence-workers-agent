@@ -3,7 +3,7 @@ import sys
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from langchain_agent import LangChainAgentExecutor
+from agents.core.langchain_agent import LangChainAgentExecutor
 
 
 def test_parse_csv_table_data():

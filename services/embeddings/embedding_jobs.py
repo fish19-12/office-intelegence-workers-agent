@@ -10,8 +10,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Union
 from uuid import uuid4
 
-from embedding_service import EmbeddingService
-from embedding_observability import EmbeddingMetrics, StructuredEventLogger
+from services.embeddings.embedding_service import EmbeddingService
+from services.embeddings.embedding_observability import EmbeddingMetrics, StructuredEventLogger
 
 
 JOB_PENDING = "pending"

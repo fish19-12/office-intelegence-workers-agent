@@ -13,8 +13,8 @@ from uuid import uuid4
 
 import numpy as np
 
-from access_control import AccessContext, AccessPolicy
-from embedding_observability import EmbeddingMetrics, StructuredEventLogger
+from security.access_control import AccessContext, AccessPolicy
+from services.embeddings.embedding_observability import EmbeddingMetrics, StructuredEventLogger
 
 try:  # pragma: no cover - depends on the environment
     import faiss

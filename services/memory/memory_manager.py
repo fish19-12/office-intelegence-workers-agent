@@ -6,8 +6,8 @@ Supports episodic, semantic, and procedural memories, plus vector similarity ret
 long-term summaries, and session-level short-term memory.
 
 Example:
-    >>> from llm_interface import LLMFactory
-    >>> from memory_manager import MemoryManager
+    >>> from services.llm.llm_interface import LLMFactory
+    >>> from services.memory.memory_manager import MemoryManager
     >>> llm = LLMFactory.create('deepseek')
     >>> mem = MemoryManager(llm=llm, persist_directory='memory_store')
     >>> mem.record('tool_executed', 'Sent payment reminder to CUST001', detail={'tool': 'email_send'}, entity_ids=['CUST001'], goal_tag='reminders')
@@ -30,7 +30,7 @@ try:
 except ImportError as exc:
     chromadb = None  # type: ignore
 
-from embeddings_rag import HuggingFaceEmbeddings
+from retrieval.embeddings_rag import HuggingFaceEmbeddings
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

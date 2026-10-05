@@ -6,7 +6,7 @@ import logging
 import time
 from typing import Any, Dict, Optional
 
-from agent_message_bus import MessageBus, make_result_message
+from agents.core.agent_message_bus import MessageBus, make_result_message
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

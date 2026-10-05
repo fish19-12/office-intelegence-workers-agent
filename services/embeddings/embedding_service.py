@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional, Sequence
 
 import numpy as np
 
-from embedding_observability import EmbeddingMetrics, StructuredEventLogger
+from services.embeddings.embedding_observability import EmbeddingMetrics, StructuredEventLogger
 
 
 class EmbeddingServiceError(RuntimeError):

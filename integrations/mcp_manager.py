@@ -12,7 +12,7 @@ import jsonschema
 
 logger = logging.getLogger(__name__)
 
-from tools import (
+from integrations.tools import (
     ClientOnboardingTool,
     EmailInboxTool,
     EmailSendTool,

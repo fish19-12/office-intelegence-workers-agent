@@ -1,151 +1,250 @@
-# Office Worker Agent
+﻿# Office Intelligence Workers Agent
 
-A comprehensive enterprise AI system for automating microfinance workflows with advanced RAG, LLM-powered planning, multi-agent coordination, and tool integration.
+A production-oriented enterprise AI platform for document intelligence, workflow orchestration, business analysis, and multi-agent execution across office operations.
 
-**🎯 Key Features**:
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.11.9-3776AB?style=for-the-badge&logo=python" alt="Python 3.11.9" />
+  <img src="https://img.shields.io/badge/FastAPI-Enabled-009688?style=for-the-badge&logo=fastapi" alt="FastAPI Enabled" />
+  <img src="https://img.shields.io/badge/AI-Multi-Agent-8A2BE2?style=for-the-badge&logo=OpenAI" alt="Multi-Agent AI" />
+</p>
 
-- ✅ Advanced RAG (hybrid search, re-ranking, decomposition, compression, self-RAG)
-- ✅ LLM-agnostic adapters (OpenAI, Deepseek, HuggingFace, Gemini, generic HTTP)
-- ✅ DAG-based reactive planning with async execution
-- ✅ ChromaDB long-term memory (episodic, semantic, procedural)
-- ✅ Multi-agent system (Supervisor + 5 Specialists)
-- ✅ Multi-format document ingestion (PDF, Excel, Word, images with OCR)
-- ✅ Tool cooldown & credential management
-- ✅ FastAPI REST backend with semantic search & report generation
+## Overview
 
-📖 **[For Detailed Architecture & File Reference → See README_DETAILED.md](README_DETAILED.md)**
+The Office Intelligence Workers Agent is designed to assist teams with business-critical analysis across documents, reports, financial data, operational records, and workflows. It combines:
 
-## Current Implementation Notes
+- large language model reasoning
+- retrieval-augmented generation (RAG)
+- multi-agent coordination
+- document ingestion and parsing
+- structured and unstructured data analysis
+- tool-driven business automation
 
-The current API is implemented in `backend_api.py`; `office_intelligence/api.py` is the hosted ASGI entrypoint, and `app.py` provides lazy ASGI/legacy WSGI wrappers. Non-health API routes require an `Authorization: Bearer <signed-service-token>` header validated with `OFFICE_INTELLIGENCE_SHARED_SECRET`. The token uses HS256 and the configured issuer/audience; the health routes are exempt.
+This project is built to support internal operations at the intersection of AI, analytics, and enterprise workflow execution.
 
-Current API families include `/query`, `/agent/run`, `/upload`, `/upload-file`, `/download-file`, `/documents`, `/plan`, `/execute-plan`, `/execute-plan/stream`, `/report`, `/report/execute-block`, `/report/finalize`, `/tools/credentials`, and `/status`. `/execute-plan` is hyphenated. `/health`, `/health/live`, and `/health/ready` are available without the service token.
+## Why this project matters
 
-Before exposing this service to customers, resolve the duplicate `POST /upload` registration in `backend_api.py`, isolate `PythonExecutionTool` in a real sandbox, protect `tool_credentials.json` (currently a process-local JSON credential store), and verify tenant isolation for agent memory, uploaded files, and credentials. This README does not certify production readiness.
+Modern enterprises generate large volumes of information across spreadsheets, PDFs, emails, contracts, performance reports, and operational logs. This system helps transform that information into actionable insight by:
+
+- retrieving the most relevant context from enterprise data
+- routing tasks to specialized analysis agents
+- executing workflows through a controllable orchestration layer
+- producing structured responses, summaries, and reports
 
 ---
 
-## Quick Start (Windows)
+## Core capabilities
 
-### 1. Bootstrap the Python Environment
+- Advanced RAG and semantic retrieval
+- Provider-agnostic LLM integration
+- Multi-agent specialist orchestration
+- CSV, Excel, JSON, SQL, and document analysis
+- Report generation and execution planning
+- File ingestion, storage, and document lifecycle management
+- Back-end API for workflow integration
+- Extension points for business tools and enterprise integrations
+
+---
+
+## High-level architecture
+
+```mermaid
+flowchart LR
+    A[Frontend / Client App] --> B[FastAPI Backend]
+    B --> C[Agent Orchestrator]
+    C --> D[Supervisor Agent]
+    D --> E[Specialist Agents]
+    C --> F[Retrieval + Memory Layer]
+    C --> G[Planning + Execution Engine]
+    E --> H[Tools & Integrations]
+    F --> I[Document Store / Vector Store]
+    G --> J[Reports & Business Outputs]
+    H --> K[Email / Google / Slack / Teams / Data Sources]
+```
+
+This architecture gives the system a clean separation between interface, orchestration, intelligence, and execution.
+
+---
+
+## System workflow
+
+```mermaid
+sequenceDiagram
+    participant U as User / Client
+    participant A as API Layer
+    participant O as Orchestrator
+    participant S as Specialist Agent
+    participant R as Retrieval / Memory
+    participant T as Tools / Integrations
+
+    U->>A: Submit query or task
+    A->>O: Validate request and route task
+    O->>R: Retrieve relevant context
+    O->>S: Dispatch agent for domain work
+    S->>T: Invoke external tools if needed
+    T-->>S: Tool result / data
+    S-->>O: Analysis output
+    O-->>A: Final result or report
+    A-->>U: Response
+```
+
+---
+
+## Main platform components
+
+| Component | Responsibility |
+| --- | --- |
+| `app.py` | ASGI/WSGI entry wrapper and runtime bootstrap |
+| `backend_api.py` | REST API and service endpoints |
+| `agent_orchestrator.py` | Central request routing and orchestration |
+| `supervisor_agent.py` | Coordination of multiple specialist agents |
+| `specialist_agents.py` | Domain-specific agent façade |
+| `reactive_planner.py` | Planning and execution flow management |
+| `base_agent.py` | Shared agent base behavior |
+| `llm_interface.py` | LLM provider abstraction |
+| `embeddings_rag.py` | Retrieval-augmented generation engine |
+| `memory_manager.py` | Knowledge and memory persistence |
+| `document_manager.py` | File and document lifecycle management |
+| `mcp_manager.py` | Tool validation and registry control |
+| `tools.py` | Business and integration tool logic |
+| `vector_store.py` | Vector memory and retrieval layer |
+| `supabase_client.py` | Optional Supabase-backed integrations |
+| `report_builder.py` | Report assembly and output generation |
+
+---
+
+## Domain specialist model
+
+The platform is built around a coordination model where a supervisor delegates to specialist agents.
+
+```mermaid
+flowchart TB
+    A[Supervisor Agent] --> B[Data Agent]
+    A --> C[Report Agent]
+    A --> D[Risk Agent]
+    A --> E[Search Agent]
+    A --> F[Communication Agent]
+    B --> G[Analytics + Data QA]
+    C --> H[Report Generation]
+    D --> I[Business Risk + Compliance]
+    E --> J[Retrieval + Context]
+    F --> K[Notifications + Messaging]
+```
+
+Examples of domain-specific logic in this repository include:
+
+- attendance analysis
+- budget and actuals analysis
+- cash flow forecasting
+- sales pipeline analysis
+- payroll and performance review analysis
+- vendor spend analysis
+- risk and compliance review
+- document and data QA tasks
+
+---
+
+## Retrieval and memory architecture
+
+The project includes a layered intelligence stack for grounding answers in enterprise knowledge.
+
+```mermaid
+flowchart LR
+    A[Uploaded Documents] --> B[Ingestion + Parsing]
+    B --> C[Chunking]
+    C --> D[Embedding Generation]
+    D --> E[Vector Store]
+    E --> F[Retrieval Engine]
+    F --> G[LLM Reasoning]
+    G --> H[Business Answer / Report]
+
+    I[Memory Manager] --> F
+    I --> G
+```
+
+### Retrieval features
+
+- hybrid search for keyword and semantic matching
+- rank and relevance refinement
+- retrieval context compression
+- episodic and semantic memory support
+- reusable context for iterative tasks
+
+---
+
+## API surface
+
+The backend exposes a production-oriented API layer for workflow execution and analysis.
+
+| Endpoint | Method | Purpose |
+| --- | --- | --- |
+| `/health` | GET | Basic health check |
+| `/health/live` | GET | Liveness probe |
+| `/health/ready` | GET | Readiness verification of runtime dependencies |
+| `/query` | POST | Query against retrieved context |
+| `/agent/run` | POST | Run a registered specialist agent |
+| `/upload` | POST | Ingest files or documents |
+| `/upload-file` | POST | Upload a file for later analysis |
+| `/download-file` | GET | Download files from storage |
+| `/documents` | GET | List available documents |
+| `/plan` | POST | Create a work plan |
+| `/execute-plan` | POST | Execute a plan |
+| `/execute-plan/stream` | GET | Stream execution status |
+| `/report` | POST | Generate report payloads |
+| `/report/execute-block` | POST | Execute a report block |
+| `/report/finalize` | POST | Finalize report output |
+| `/tools/credentials` | POST | Update tool credentials |
+| `/status` | GET | Runtime status overview |
+
+> Authentication is enforced for most routes; health checks remain publicly accessible.
+
+---
+
+## Quick start
+
+### 1. Bootstrap the environment
 
 ```powershell
 python start.py
 ```
 
-This creates `.venv` and installs `requirements.txt` when the environment is missing. It does not start the API server. The pinned runtime is Python 3.11.9 (`.python-version`).
+This creates or reuses a virtual environment and installs dependencies from `requirements.txt` when required.
 
-### 2. Configure Credentials
+### 2. Configure runtime settings
 
-Copy `.env.example` to `.env` and configure the shared service secret, allowed origins, an LLM provider/key, and only the integrations you intend to use. Keep secrets out of source control.
-
-### 3. Start the Backend
-
-```powershell
-python -m uvicorn office_intelligence.api:app --reload --host 127.0.0.1 --port 8000
-```
-
-Backend is now at `http://localhost:8000`
-
-### Deployment
-
-Render uses `render.yaml` and starts the ASGI app with Uvicorn:
-
-```text
-uvicorn office_intelligence.api:app --host 0.0.0.0 --port $PORT
-```
-
-The configured entrypoint `office_intelligence.api:app` lazily imports the backend, so liveness checks do not construct the agent or embedding services. `/health/ready` reports whether the shared secret, non-wildcard origin configuration, and a non-mock LLM provider are configured.
-
-### 4. Try It Out
-
-Except for health checks, API requests require a short-lived signed service token from a trusted caller. Do not generate or expose this token in browser code. Use the web app's server-side proxy or an approved test-token tool.
-
----
-
-## Core Components
-
-| File                      | Purpose                                                  |
-| ------------------------- | -------------------------------------------------------- |
-| **agent_orchestrator.py** | Central hub wiring all services                          |
-| **embeddings_rag.py**     | Advanced RAG: hybrid search, re-ranking, decomposition   |
-| **llm_interface.py**      | LLM adapters (OpenAI, Deepseek, HuggingFace, Gemini)     |
-| **memory_manager.py**     | ChromaDB long-term memory (episodic/semantic/procedural) |
-| **reactive_planner.py**   | DAG-based planner with parallel execution                |
-| **document_manager.py**   | Multi-format document ingestion                          |
-| **mcp_manager.py**        | Tool registry, validation, cooldown                      |
-| **tools.py**              | Email, Google, microfinance tools                        |
-| **backend_api.py**        | FastAPI REST endpoints                                   |
-| **specialist_agents.py**  | Data, Report, Communication, Risk, Search agents         |
-| **supervisor_agent.py**   | Multi-agent orchestrator                                 |
-
-📖 **[Full documentation → README_DETAILED.md](README_DETAILED.md)**
-
----
-
-## REST API Endpoints
-
-| Endpoint                                               | Method          | Purpose                                                                            |
-| ------------------------------------------------------ | --------------- | ---------------------------------------------------------------------------------- |
-| `/health`, `/health/live`, `/health/ready`             | GET             | Liveness and readiness checks; no service bearer token required.                   |
-| `/query`                                               | POST            | Retrieve relevant document context and generate an answer.                         |
-| `/agent/run`                                           | POST            | Run a registered specialist agent.                                                 |
-| `/upload`                                              | POST            | Ingest documents; see the duplicate-route warning above.                           |
-| `/upload-file`                                         | POST            | Store an uploaded file for later analysis.                                         |
-| `/download-file`                                       | GET             | Download an uploaded file by path.                                                 |
-| `/documents`, `/status`                                | GET             | List ingested documents and report service status.                                 |
-| `/plan`, `/execute-plan`, `/execute-plan/stream`       | POST, POST, GET | Preview, execute, or stream a plan. Irreversible actions may require confirmation. |
-| `/report`, `/report/execute-block`, `/report/finalize` | POST            | Generate, execute report blocks, and finalize reports.                             |
-| `/tools/credentials`                                   | POST            | Update tool credentials; currently stored in the process-local JSON store.         |
-
-All listed routes except health checks require a signed service token in the `Authorization: Bearer <token>` header.
-
----
-
-## Environment Variables
-
-The API also requires the following service settings for authenticated calls and a ready production health check:
+Create a `.env` file based on `.env.example` and configure the values you need.
 
 ```env
-OFFICE_INTELLIGENCE_SHARED_SECRET=use-a-long-random-secret
+OFFICE_INTELLIGENCE_SHARED_SECRET=replace-with-a-strong-secret
 OFFICE_INTELLIGENCE_ALLOWED_ORIGINS=http://localhost:3000
 LLM_PROVIDER=deepseek
 MAX_UPLOAD_BYTES=52428800
 ```
 
-The same shared secret must be configured in the trusted server that signs requests. Do not expose it through a `NEXT_PUBLIC_` variable.
+### 3. Start the backend
 
-```bash
-# LLM (choose one provider)
-OPENAI_API_KEY=sk-...
-DEEPSEEK_API_KEY=sk-...
-DEEPSEEK_API_BASE=https://api.deepseek.com/v1
-HF_TOKEN=hf_...
-
-# Email
-EMAIL_SMTP_SERVER=smtp.gmail.com
-EMAIL_USERNAME=admin@company.com
-EMAIL_PASSWORD=***
-
-# Google (optional)
-GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
-
-# Notifications (optional)
-SLACK_WEBHOOK_URL=https://hooks.slack.com/...
-TEAMS_WEBHOOK_URL=https://outlook.webhook.office.com/...
-
-# Supabase (optional, for remote vector storage)
-SUPABASE_URL=https://xxx.supabase.co
-SUPABASE_KEY=eyJhbGc...
+```powershell
+python -m uvicorn office_intelligence.api:app --reload --host 127.0.0.1 --port 8000
 ```
 
-See `.env.example` for all variables.
+The API is then available locally at:
+
+```text
+http://localhost:8000
+```
+
+### 4. Deploy on Render
+
+The project includes a Render configuration in `render.yaml`.
+
+```text
+uvicorn office_intelligence.api:app --host 0.0.0.0 --port $PORT
+```
 
 ---
 
-## Python API Examples
+## Example usage
 
-### Semantic Search
+### Query a dataset
 
 ```python
 from agent_orchestrator import AgentOrchestrator
@@ -156,7 +255,7 @@ result = agent.query("Which clients have payment delays?")
 print(result.answer)
 ```
 
-### Planning & Execution
+### Plan and execute work
 
 ```python
 plan = agent.plan("Send payment reminders to overdue clients", top_k=5)
@@ -169,119 +268,70 @@ result = agent.execute_plan(plan, confirmed=confirmed)
 print(f"Goal achieved: {result.goal_achieved}")
 ```
 
-### Report Generation
+### Generate a report
 
 ```python
 report = agent.generate_report(
     goal="Create Q4 2024 risk assessment",
     query="high-risk clients, default rates",
-    top_k=10
+    top_k=10,
 )
+
 if report.ready_to_finalize:
     report.to_word("Q4_Assessment.docx")
 ```
 
 ---
 
-## LLM Adapters
+## Supported document and data types
 
-`LLMFactory` currently selects OpenAI, DeepSeek, Hugging Face, Gemini, or Mock. `GenericHTTPAdapter` is available for direct use, but the factory does not currently select it by a `generic` provider name.
-
-```python
-from llm_interface import LLMFactory
-
-# OpenAI
-llm = LLMFactory.create({"llm_provider": "openai", "model": "gpt-4"})
-
-# Deepseek (OpenAI-compatible)
-llm = LLMFactory.create({"llm_provider": "deepseek"})
-
-# HuggingFace
-llm = LLMFactory.create({"llm_provider": "huggingface"})
-
-# Gemini
-llm = LLMFactory.create({"llm_provider": "gemini"})
-
-# Generic (any OpenAI-compatible)
-llm = LLMFactory.create({"llm_provider": "generic", "api_base": "..."})
-
-# Mock (testing)
-llm = LLMFactory.create({"llm_provider": "mock"})
-```
+- PDF and scanned documents
+- Excel and CSV files
+- JSON payloads
+- Word documents
+- images with OCR support where installed
+- structured business datasets for reporting and analysis
 
 ---
 
-## Advanced RAG Features
+## Security and production readiness
 
-- **Hybrid Search**: BM25 (keyword) + Vector (semantic)
-- **Re-ranking**: Cross-encoder for relevance
-- **Query Decomposition**: LLM breaks complex questions
-- **Compression**: Reduce token consumption
-- **Knowledge Graph**: Entity relationships
-- **Self-RAG**: Decide when search needed
+This is a strong architectural foundation, but it is important to treat it as an actively evolving platform rather than a fully hardened production deployment.
 
----
+The project documentation explicitly highlights the need to address:
 
-## Multi-Agent System
+- duplicate route registration in `backend_api.py`
+- secure credential storage
+- sandboxing of code execution tools
+- tenant isolation for uploads, memory, and credentials
+- secure handling of service tokens and allowed origins
 
-Supervisor coordinates 5 specialist agents:
-
-1. **DataAgent** - Spreadsheets, aggregation
-2. **ReportAgent** - Document generation
-3. **CommunicationAgent** - Email, notifications
-4. **RiskAgent** - Loan scoring, compliance
-5. **SearchAgent** - RAG-based retrieval
+These topics are essential before public deployment or enterprise-scale production use.
 
 ---
 
-## Document Support
+## Documentation index
 
-- **PDF**: Text + OCR for scanned
-- **Excel**: .xlsx, .xls
-- **Word**: .docx
-- **CSV**: Configurable
-- **Images**: .png, .jpg, and .jpeg; OCR depends on the selected ingestion path and installed Tesseract binary.
-
-For OCR, install Tesseract:
-
-```powershell
-scoop install tesseract
-```
+- [README_PRODUCTION.md](README_PRODUCTION.md) — production overview and system architecture
+- [README_DETAILED.md](README_DETAILED.md) — source map, implementation notes, and deeper technical reference
+- [DETAILED_FUNCTIONALITY_REPORT_UPDATES.md](DETAILED_FUNCTIONALITY_REPORT_UPDATES.md) — functionality and QA updates
+- [ENTERPRISE_OPERATING_MODEL.md](ENTERPRISE_OPERATING_MODEL.md) — operating model and enterprise guidance
 
 ---
 
-## Web-App Integration
+## Project status
 
-The related Next.js project calls this service through its server-side Office Intelligence proxy. Configure `OFFICE_INTELLIGENCE_URL` in the web app and use the same `OFFICE_INTELLIGENCE_SHARED_SECRET` on both sides. Keep the secret server-side. The web app repository has its own setup instructions.
+- Active implementation in progress
+- Multi-agent architecture present and modular
+- API and orchestration structure in place
+- Production hardening still required for secure large-scale deployment
 
----
-
-## Architecture Overview
-
-```
-┌──────────────────────────────────┐
-│    Frontend (Next.js)            │
-├──────────────────────────────────┤
-│    Backend REST API (FastAPI)    │
-├──────────────────────────────────┤
-│    AgentOrchestrator (Hub)       │
-├────────┬────────┬────────┬───────┤
-│  RAG   │ Memory │Planner │Agents │
-├────────┴────────┴────────┴───────┤
-│     Tools (Email, Google, etc.)  │
-└──────────────────────────────────┘
-```
+**Python version:** 3.11.9
 
 ---
 
-## Documentation
+## Summary
 
-- **[README_DETAILED.md](README_DETAILED.md)** - Current architecture, source map, API, and operational caveats
-- **[DETAILED_FUNCTIONALITY_REPORT_UPDATES.md](DETAILED_FUNCTIONALITY_REPORT_UPDATES.md)** - Recent QA and follow-up notes
-- **[ENTERPRISE_OPERATING_MODEL.md](ENTERPRISE_OPERATING_MODEL.md)** - Operational model and enterprise considerations
+The Office Intelligence Workers Agent is a flexible, extensible AI platform for enterprise operations and intelligent business workflows. It is built around a modular architecture, domain-specialist agents, retrieval-grounded reasoning, and enterprise API integration.
 
----
-
-**Implementation status:** active codebase with automated tests, but production readiness depends on resolving the documented upload, code-execution, credential-storage, and tenant-isolation risks and validating the deployed services.
-
-**Python version:** 3.11.9, as declared in `.python-version` and `render.yaml`.
+With its combination of document ingestion, analysis, planning, retrieval, and multi-agent orchestration, it provides a strong foundation for AI-powered business automation.

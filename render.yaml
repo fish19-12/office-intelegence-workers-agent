@@ -2,30 +2,70 @@ services:
   - type: web
     name: office-intelligence-workers-agent
     runtime: python
+    region: oregon
     plan: starter
-    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
-    startCommand: uvicorn office_intelligence.api:app --host 0.0.0.0 --port $PORT
+    autoDeploy: true
+    buildCommand: |
+      python -m pip install --upgrade pip setuptools wheel &&
+      python -m pip install --no-cache-dir -r requirements.txt
+    startCommand: >-
+      gunicorn office_intelligence.api:app
+      --workers 2
+      --worker-class uvicorn.workers.UvicornWorker
+      --bind 0.0.0.0:$PORT
     healthCheckPath: /health/live
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.9
+        value: "3.11.9"
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: APP_ENV
+        value: "production"
+      - key: MAX_UPLOAD_BYTES
+        value: "52428800"
+      - key: MAX_FILE_UPLOADS
+        value: "10"
       - key: OFFICE_INTELLIGENCE_ALLOWED_ORIGINS
         sync: false
       - key: OFFICE_INTELLIGENCE_SHARED_SECRET
         sync: false
-      - key: MAX_UPLOAD_BYTES
-        value: "52428800"
+      - key: LLM_PROVIDER
+        sync: false
+      - key: LLM_MODEL
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_API_BASE
+        sync: false
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: DEEPSEEK_API_BASE
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_API_BASE
+        sync: false
+      - key: HF_TOKEN
+        sync: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_KEY
         sync: false
-      - key: LLM_PROVIDER
+      - key: EMAIL_SMTP_SERVER
         sync: false
-      - key: OPENAI_API_KEY
+      - key: EMAIL_SMTP_PORT
+        value: "587"
+      - key: EMAIL_USERNAME
         sync: false
-      - key: DEEPSEEK_API_KEY
+      - key: EMAIL_PASSWORD
         sync: false
-      - key: GEMINI_API_KEY
+      - key: GOOGLE_APPLICATION_CREDENTIALS
         sync: false
-      - key: PYTHONUNBUFFERED
-        value: "1"
+      - key: GOOGLE_IMPERSONATED_USER
+        sync: false
+      - key: SLACK_WEBHOOK_URL
+        sync: false
+      - key: TEAMS_WEBHOOK_URL
+        sync: false
+      - key: SECURITY_HEADERS_ENABLED
+        value: "true"

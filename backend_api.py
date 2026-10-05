@@ -404,20 +404,50 @@ def _resolve_uploaded_agent_input(
 
 
 app = FastAPI(title="Microfinance Worker Agent API", version="1.0.0")
-allowed_origins = [
-    origin.strip()
-    for origin in os.environ.get(
-        "OFFICE_INTELLIGENCE_ALLOWED_ORIGINS", "http://localhost:3000"
-    ).split(",")
-    if origin.strip()
-]
+
+
+def _parse_allowed_origins(raw_value: str) -> List[str]:
+    origins: List[str] = []
+    for entry in (raw_value or "").split(","):
+        origin = entry.strip().rstrip("/")
+        if not origin or origin == "*":
+            continue
+        if not origin.startswith(("http://", "https://")):
+            raise ValueError(f"Invalid allowed origin: {origin}")
+        origins.append(origin)
+    return origins
+
+
+try:
+    allowed_origins = _parse_allowed_origins(
+        os.environ.get("OFFICE_INTELLIGENCE_ALLOWED_ORIGINS", "http://localhost:3000")
+    )
+except ValueError as exc:
+    logger.warning("Invalid OFFICE_INTELLIGENCE_ALLOWED_ORIGINS configuration: %s", exc)
+    allowed_origins = ["http://localhost:3000"]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
 )
+
+
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "no-referrer")
+    response.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
+    if request.url.scheme == "https":
+        response.headers.setdefault(
+            "Strict-Transport-Security",
+            "max-age=31536000; includeSubDomains",
+        )
+    return response
 
 
 @app.middleware("http")

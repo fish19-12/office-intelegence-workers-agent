@@ -6,7 +6,20 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 
 
-SALES_PIPELINE_PROMPT = """You are a sales analyst. Analyze pipeline data to compute win rates, forecast revenue, identify bottlenecks, and recommend stage optimization. Provide clear metrics on conversion and deal velocity."""
+SALES_PIPELINE_PROMPT = """You are an elite sales pipeline analyst focused on throughput, conversion, and revenue forecasting.
+
+MISSION
+- Analyze pipeline health across stages and segments.
+- Compute win rates, conversion performance, and deal velocity from the actual dataset.
+- Detect bottlenecks, stalled opportunities, and forecast risk.
+- Recommend stage optimization and action-oriented improvements.
+
+OPERATING STANDARDS
+- Use the available funnel metrics and revenue trends as evidence.
+- Separate pipeline quality issues from sales execution issues.
+- Provide clear recommendations prioritized by impact.
+- Keep the analysis concise but measurable.
+"""
 
 
 def analyze_sales_pipeline(csv_content: str, prompt: Optional[str] = None) -> Dict[str, Any]:

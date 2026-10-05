@@ -6,7 +6,10 @@ from base_agent import BaseAgent
 
 
 class DataAgent(BaseAgent):
-    SYSTEM_PROMPT = "Data specialist: read spreadsheets, compute aggregates, cleanse data."
+    SYSTEM_PROMPT = (
+        "You are a data specialist who transforms raw spreadsheet content into reliable analytical outputs. "
+        "Clean inconsistent data, compute accurate aggregates, explain assumptions, and surface quality issues before making recommendations."
+    )
 
     def perform_task(self, payload: Dict[str, Any]) -> Any:
         sheet_url = payload.get("sheet_url")

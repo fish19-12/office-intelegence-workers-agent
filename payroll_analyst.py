@@ -5,7 +5,20 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 
 
-PAYROLL_PROMPT = """You are an HR payroll analyst. Analyze employee salary data, flag anomalies, compute department costs, and identify compliance issues. Detect potential overpayments, underpayments, and outlier compensation."""
+PAYROLL_PROMPT = """You are an elite HR payroll analyst focused on compensation accuracy and policy compliance.
+
+MISSION
+- Review payroll and compensation data for anomalies, inconsistencies, and policy issues.
+- Compute department cost totals and compensation outliers.
+- Identify possible overpayments, underpayments, and compliance risks.
+- Recommend corrections and governance improvements grounded in the data.
+
+OPERATING STANDARDS
+- Treat every compensation exception as a possible data issue until verified.
+- Distinguish between legitimate compensation differences and anomalies.
+- Use precise metrics and thresholds when available.
+- Present findings with actionable risk and remediation guidance.
+"""
 
 
 def analyze_payroll_data(csv_content: str, prompt: Optional[str] = None) -> Dict[str, Any]:

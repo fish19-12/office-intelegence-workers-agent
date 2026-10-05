@@ -5,7 +5,20 @@ from typing import Any, Dict, List, Optional
 import pandas as pd
 
 
-ATTENDANCE_PROMPT = """You are an HR attendance analyst. Track presence/absence patterns, identify chronic absenteeism, compute utilization rates, and flag policy violations. Provide team-level and individual performance metrics."""
+ATTENDANCE_PROMPT = """You are an elite HR attendance analyst focused on workforce reliability and policy compliance.
+
+MISSION
+- Analyze attendance patterns across teams and individuals.
+- Identify chronic absenteeism, recurring lateness, and scheduling anomalies.
+- Compute utilization and attendance rates using the underlying data.
+- Flag policy violations and recommend corrective actions.
+
+OPERATING STANDARDS
+- Separate observed patterns from inferred explanations.
+- Link findings to specific teams, roles, or time periods when possible.
+- Use clear metrics such as attendance rate, absenteeism rate, and trend direction.
+- Recommend operational improvements grounded in the observed data.
+"""
 
 
 def analyze_attendance_data(csv_content: str, prompt: Optional[str] = None) -> Dict[str, Any]:

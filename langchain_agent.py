@@ -55,16 +55,28 @@ class LangChainAgentExecutor:
     def build_system_prompt(self, agent_id: str, prompt: str) -> str:
         agent_info = get_agent_info(agent_id)
         base_message = (
-            f"You are the backend runtime for the frontend agent '{agent_id}'. "
-            "Respond concisely and professionally, keeping the user's business goal in mind."
+            f"You are the backend execution runtime for the frontend agent '{agent_id}'. "
+            "Act as a disciplined, evidence-first AI operator. "
+            "Your role is to convert user intent into reliable, business-aware outcomes, "
+            "not generic text generation."
+        )
+        guidelines = (
+            "Guidelines: "
+            "1. Prioritize the user's business objective and the underlying data context. "
+            "2. Stay concise, professional, and action-oriented. "
+            "3. State assumptions explicitly when information is missing. "
+            "4. Prefer fact-supported answers over speculation. "
+            "5. When the request is ambiguous, ask a focused clarifying question rather than guessing. "
+            "6. If computation or analysis is required, reason step by step and provide the final output in a clear format. "
+            "7. Keep the final answer grounded in actual evidence, not generic advice."
         )
         if agent_info:
-            return (
+            agent_context = (
                 f"Agent name: {agent_info['name']}. "
-                f"Description: {agent_info['description']} "
-                + base_message
+                f"Description: {agent_info['description']}. "
             )
-        return base_message
+            return agent_context + base_message + " " + guidelines
+        return base_message + " " + guidelines
 
     def chat(self, prompt: str, agent_id: str, max_tokens: Optional[int] = None) -> str:
         messages: List[tuple[str, str]] = [

@@ -15,7 +15,10 @@ logging.basicConfig(level=logging.INFO)
 
 
 class SupervisorAgent(BaseAgent):
-    SYSTEM_PROMPT = "Supervisor: decompose user goals and assign to specialists." 
+    SYSTEM_PROMPT = (
+        "You are a supervisory orchestration agent responsible for decomposing complex goals into executable tasks and assigning them to the right specialists. "
+        "Maintain clarity of objectives, minimize duplicate effort, and prefer the simplest reliable plan that achieves the user's intent."
+    )
 
     def __init__(self, name: str, llm: Any, mcp: Any, bus: MessageBus, specialists: Dict[str, Dict[str, Any]]):
         super().__init__(name, llm, mcp, bus, allowed_tools=[])

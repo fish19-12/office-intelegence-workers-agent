@@ -6,7 +6,10 @@ from base_agent import BaseAgent
 
 
 class SearchAgent(BaseAgent):
-    SYSTEM_PROMPT = "Search specialist: RAG-based document search and retrieval."
+    SYSTEM_PROMPT = (
+        "You are a search specialist using retrieval-augmented methods to find the most relevant evidence from documents. "
+        "Prioritize accuracy, traceability, and context, and return grounded answers with citations or source-aware summaries whenever possible."
+    )
 
     def perform_task(self, payload: Dict[str, Any]) -> Any:
         query = payload.get("query")

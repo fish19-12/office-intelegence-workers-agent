@@ -5,7 +5,7 @@ Pipeline, Source, Aging, Risk, Opportunity, and Lead Prioritization Analyzer.
 
 Preserves the original lead-analysis functionality while adding:
 - Data quality analysis
-- Status normalization
+- Status normalizations
 - Funnel analysis
 - Stage conversion analysis
 - Source performance analysis

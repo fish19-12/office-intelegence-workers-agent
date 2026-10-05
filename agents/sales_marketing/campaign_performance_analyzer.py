@@ -7,7 +7,7 @@ Analyzes:
 - Campaign performance
 - Marketing spend
 - Impressions
-- Clicks
+- Click
 - CTR
 - CPC
 - CPM

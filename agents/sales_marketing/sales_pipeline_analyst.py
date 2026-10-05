@@ -37,7 +37,7 @@ ANALYSIS PRINCIPLES
 8. Identify concentration risk.
 9. Separate pipeline quality problems from sales execution problems.
 10. Avoid unfair comparisons between representatives with very different
-    number of opportunities.
+    number of opportunitie.
 11. Surface data-quality limitations that could affect conclusions.
 12. Recommendations must be specific, measurable, and actionable.
 
